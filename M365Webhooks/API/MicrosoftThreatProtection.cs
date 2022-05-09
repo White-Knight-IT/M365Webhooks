@@ -3,28 +3,30 @@ namespace M365Webhooks
 {
 	internal class MicrosoftThreatProtection : Request
 	{
+		#region Internal Members
+
 		//The resource we obtain our JWT OAuth2 token for
 		public const string ResourceId = "https://api.security.microsoft.com";
 
-		//Request will only  seek data that is >= this time
-		private string _lastRequestTime;
+        #endregion
 
-		public MicrosoftThreatProtection():base(ResourceId)
+        public MicrosoftThreatProtection():base(ResourceId)
 		{
-			//On first run we get all incidents in the last 24 hours
-			_lastRequestTime = DateTime.Now.ToUniversalTime().AddHours(-24).ToString("o");
+
 		}
 
-        /// <summary>
-        /// Gets incidents from https://api.security.microsoft.com/api/incidents
-        /// </summary>
-        /// <returns>List of JSON Objects, each Object is an Incident see https://docs.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents?view=o365-worldwide</returns>
-        public async Task<List<JsonElement>> ListIncidents()
+		#region Public Methods
+
+		/// <summary>
+		/// Gets incidents from https://api.security.microsoft.com/api/incidents
+		/// </summary>
+		/// <returns>List of JSON Objects, each Object is an Incident see https://docs.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents?view=o365-worldwide</returns>
+		public async Task<List<JsonElement>> ListIncidents()
         {
 			DateTime nowTime = DateTime.Now;
 
-			List<HttpContent> responseContent = await SendRequest(ResourceId+ "/api/incidents?$filter=lastUpdateTime+ge+"+_lastRequestTime);
-			_lastRequestTime = nowTime.ToUniversalTime().ToString("o");
+			List<HttpContent> responseContent = await SendRequest(ResourceId+ "/api/incidents?$filter=lastUpdateTime+ge+"+LastRequestTime,HttpMethod.Get);
+			LastRequestTime = nowTime.ToUniversalTime().ToString("o");
             List<JsonElement> incidents = new();
 
 			//We will get 
@@ -40,6 +42,8 @@ namespace M365Webhooks
 			}
 			return incidents;
 		}
-	}
+
+        #endregion
+    }
 }
 

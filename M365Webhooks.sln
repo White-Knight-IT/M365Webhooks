@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1700.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M365Webhooks", "M365Webhooks\M365Webhooks.csproj", "{90B8B81F-C42D-4E31-A963-4ED2D8FD13A3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M365Webhooks", "M365Webhooks\M365Webhooks.csproj", "{56B35071-C18A-4617-AD3C-3B2D325C1300}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,34 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{90B8B81F-C42D-4E31-A963-4ED2D8FD13A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{90B8B81F-C42D-4E31-A963-4ED2D8FD13A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{90B8B81F-C42D-4E31-A963-4ED2D8FD13A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{90B8B81F-C42D-4E31-A963-4ED2D8FD13A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56B35071-C18A-4617-AD3C-3B2D325C1300}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56B35071-C18A-4617-AD3C-3B2D325C1300}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56B35071-C18A-4617-AD3C-3B2D325C1300}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56B35071-C18A-4617-AD3C-3B2D325C1300}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {133348D8-C352-4EAB-ADC2-FF3A293C3A0E}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+		$0.TextStylePolicy = $2
+		$2.FileWidth = 80
+		$2.TabsToSpaces = True
+		$2.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $3
+		$3.scope = text/x-csharp
+		$0.TextStylePolicy = $4
+		$4.FileWidth = 80
+		$4.TabsToSpaces = True
+		$4.scope = text/plain
+		$0.TextStylePolicy = $5
+		$5.inheritsSet = null
+		$5.scope = text/x-json
+		version = 1.0
 	EndGlobalSection
 EndGlobal

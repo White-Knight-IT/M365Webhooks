@@ -2,7 +2,7 @@
 {
 	internal class Raw:Webhook
 	{
-		public Raw():base()
+		public Raw(string webhookAddress):base(webhookAddress)
 		{
 
 		}

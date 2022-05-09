@@ -6,7 +6,7 @@ namespace M365Webhooks
     /// </summary>
 	public static class Log
 	{
-		private static StreamWriter? _logFileStream = null;
+		private static StreamWriter? _logFileStream;
 
 		/// <summary>
         /// Opens the log file and writes a line to it, then closes the log again
@@ -16,7 +16,7 @@ namespace M365Webhooks
         {
 			if(LoggingEnabled())
             {
-				_logFileStream = new StreamWriter(Configuration.logPath, true);
+				_logFileStream = new StreamWriter(Configuration.LogPath, true);
 				await _logFileStream.WriteLineAsync("["+DateTime.Now.ToShortDateString()+" - "+DateTime.Now.ToLongTimeString()+"]: "+line+"\n");
 				CloseLog();
             }
@@ -38,7 +38,7 @@ namespace M365Webhooks
 		private static bool LoggingEnabled()
 		{
 			//Only deem logging enabled if a log path is specified
-			if (!string.IsNullOrEmpty(Configuration.logPath) && !string.IsNullOrWhiteSpace(Configuration.logPath))
+			if (!string.IsNullOrEmpty(Configuration.LogPath) && !string.IsNullOrWhiteSpace(Configuration.LogPath))
 			{
 				return true;
 			}

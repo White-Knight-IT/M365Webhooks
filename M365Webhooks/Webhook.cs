@@ -2,9 +2,11 @@
 {
 	abstract class Webhook
 	{
-		public Webhook()
-		{
+		private string _webhookAddress;
 
+		public Webhook(string webhookAddress)
+		{
+			_webhookAddress = webhookAddress;
 		}
 	}
 }

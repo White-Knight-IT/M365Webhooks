@@ -14,7 +14,7 @@ namespace M365Webhooks
 		private string _tenantId;
 		private string _appId;
 		private string _oauthToken;
-        private JwtSecurityToken _decodedOauthToken;
+        private JwtSecurityToken? _decodedOauthToken;
         private object _credential;
         private string _resourceId;
 
@@ -39,13 +39,19 @@ namespace M365Webhooks
             return new JwtSecurityTokenHandler().ReadJwtToken(oauthToken);
         }
 
+        // Check if the supplied token is expired
+        private bool CheckTokenExpired(JwtSecurityToken token)
+        {
+            return (token.ValidTo.AddMinutes(-Configuration.TokenExpires) < DateTime.UtcNow);
+        }
+
         // Fetch OAuth2 Token from Azure AD app
         private string GetToken()
         {
-			AuthenticationContext auth = new AuthenticationContext($"{Configuration.authority}/{_tenantId}/");
+			AuthenticationContext auth = new AuthenticationContext($"{Configuration.Authority}/{_tenantId}/");
 			AuthenticationResult authenticationResult;
 
-            if (Configuration.debug)
+            if (Configuration.Debug)
             {
                 Console.WriteLine("[{0} - {1}]: Attempting to get token for Tenant ID: {2} and App ID: {3}\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), _tenantId, _appId);
                 Log.WriteLine("Attempting to get token for Tenant ID: "+_tenantId+" and App ID: "+_appId);
@@ -66,10 +72,10 @@ namespace M365Webhooks
 
             string oauthToken = authenticationResult.AccessToken;
             _decodedOauthToken=DecodeToken(oauthToken);
-            if (Configuration.debug)
+            if (Configuration.Debug)
             {
                 // Only dump tokens if explicitely told to save tokens ending up in logs and debug output
-                if (Configuration.debugShowSecrets)
+                if (Configuration.DebugShowSecrets)
                 {
                     Console.WriteLine("[{0} - {1}]: Token: {0}\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), oauthToken);
                     Log.WriteLine("Token: "+oauthToken);
@@ -88,15 +94,26 @@ namespace M365Webhooks
 
 		public bool RefreshToken()
         {
-			_oauthToken = GetToken();
+			string newToken = GetToken();
 
-            // Check the new token isn't null and that it isn't expired
-			if (_oauthToken.Equals(null) || Expired)
+            // Check the new token isn't null
+            if (newToken.Equals(null))
             {
 				return false;
             }
 
-                return true;
+            JwtSecurityToken newDecodedToken = DecodeToken(newToken);
+
+            // Check the new token isn't isn't expired
+            if (CheckTokenExpired(newDecodedToken))
+            {
+                return false;
+            }
+
+            //
+            _oauthToken = newToken;
+            _decodedOauthToken = newDecodedToken;
+            return true;
         }
 
         #endregion
@@ -111,15 +128,15 @@ namespace M365Webhooks
             // Iterate through all the user supplied configuration to find working credentials and build them into a list
 
             // Test each Tenant ID
-            foreach (string tenantId in Configuration.tenantId)
+            foreach (string tenantId in Configuration.TenantId)
             {
                 // Test each App ID for every Tenant ID
-                foreach (string appId in Configuration.appId)
+                foreach (string appId in Configuration.AppId)
                 {
                     bool found = false;
 
                     // Test each certificate for every App ID
-                    foreach (string certPath in Configuration.certificatePath)
+                    foreach (string certPath in Configuration.CertificatePath)
                     {
                         try
                         {
@@ -132,7 +149,7 @@ namespace M365Webhooks
                         catch
                         {
                             // Failed trying certificate with no password so try with each password
-                            foreach (string certPassword in Configuration.certificatePassword)
+                            foreach (string certPassword in Configuration.CertificatePassword)
                             {
                                 try
                                 {
@@ -153,7 +170,7 @@ namespace M365Webhooks
                     if (!found)
                     {
                         // Also test every App ID with each App Secret
-                        foreach (string appSecret in Configuration.appSecret)
+                        foreach (string appSecret in Configuration.AppSecret)
                         {
                             if (!appSecret.Equals(null) && appSecret != "")
                             {
@@ -184,9 +201,9 @@ namespace M365Webhooks
 		public string AppId { get { return _appId; } }
 		public string OauthToken { get { return _oauthToken; } }
         public string ResourceID { get { return _resourceId; } }
-        public JwtSecurityToken JWT { get { return _decodedOauthToken; } }
+        public JwtSecurityToken? JWT { get { return _decodedOauthToken; } }
         public DateTime Expires { get { return _decodedOauthToken.ValidTo; } }
-        public bool Expired { get { return _decodedOauthToken.ValidTo.AddSeconds(-30) < DateTime.UtcNow; } }
+        public bool Expired { get { return CheckTokenExpired(_decodedOauthToken); } } // We declare the token as expired 15 minutes before real expire time to allow for bad time drift
         public List<Credential> Credentials { get { return _credentials; } }
 
         #endregion
