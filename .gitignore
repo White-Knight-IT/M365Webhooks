@@ -1,0 +1,27 @@
+# Ignore potential log files
+
+*.txt
+*.log
+
+# Ignote potential certificate files
+
+*.pfx
+*.cer
+*.pem
+*.der
+
+# Ignore config file
+
+config.json
+
+# Ignore OS files
+
+.DS_Store
+thumbs.db
+
+# Ignore binary build folders
+
+bin
+/bin
+/M365Webhooks/bin
+
