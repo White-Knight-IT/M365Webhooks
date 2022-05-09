@@ -27,3 +27,8 @@ bin
 obj
 /obj
 /M365Webhooks/obj
+
+# Ignore project cache
+
+/.vs/M365Webhooks/xs/project-cache
+project-cache
