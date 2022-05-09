@@ -24,4 +24,6 @@ thumbs.db
 bin
 /bin
 /M365Webhooks/bin
-
+obj
+/obj
+/M365Webhooks/obj
