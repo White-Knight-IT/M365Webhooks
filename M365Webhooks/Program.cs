@@ -3,7 +3,9 @@
 /// Published under MIT License
 
 using M365Webhooks;
-using System.Text.Json;
+
+Log.WriteLine("M365Webhooks Process Started");
+Console.WriteLine("[{0} - {1}]: M365Webhooks Process Started\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString());
 
 #region Config Sanity Checking
 
@@ -22,6 +24,14 @@ void SanityCheckConfig()
     if (string.IsNullOrEmpty(Configuration.Debug.ToString()))
     {
         Configuration.Debug = false;
+    }
+
+    int webhooks = Configuration.WebhookAddress.Length;
+
+    // Check correct number of config items to build webhooks
+    if ((webhooks != Configuration.WebhookType.Length) || (webhooks != Configuration.WebhookAuth.Length) || (webhooks != Configuration.WebhookAuthType.Length) || (webhooks != Configuration.Api.Length) || (webhooks != Configuration.ApiMethod.Length))
+    {
+        //throw
     }
 
     // Tokens live 60 minutes so anything over 58 could cause constant token fetch
@@ -43,14 +53,19 @@ void SanityCheckConfig()
 
 #endregion
 
-Log.WriteLine("M365Webhooks Process Started");
-Console.WriteLine("[{0} - {1}]: M365Webhooks Process Started\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString());
-
 // Do some very light sanity checking of config.json
 SanityCheckConfig();
 
-MicrosoftThreatProtection mtp = new MicrosoftThreatProtection();
-List<JsonElement> incidents = mtp.ListIncidents().Result;
+List<PullPushPair> pollPairs = new();
+
+// Build PullPushPairs based on webhook outputs
+
+for(int _i=0;_i<Configuration.WebhookAddress.Length;_i++)
+{
+    pollPairs.Add(new PullPushPair(Configuration.Api[_i], Configuration.ApiMethod[_i], Configuration.WebhookAddress[_i], Configuration.WebhookType[_i], Configuration.WebhookAuthType[_i], Configuration.WebhookAuth[_i]));
+    pollPairs[_i].Poll();
+}
+
 
 Log.WriteLine("M365Webhooks Process Ended");
 Console.WriteLine("[{0} - {1}]: M365Webhooks Process Ended\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString());

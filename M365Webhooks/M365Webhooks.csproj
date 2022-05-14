@@ -18,6 +18,7 @@
     <None Remove="API\" />
     <None Remove="Webhooks\" />
     <None Remove="Microsoft.Extensions.Logging" />
+    <None Remove="API\MicrosoftGraphSecurity.cs_" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.9" />

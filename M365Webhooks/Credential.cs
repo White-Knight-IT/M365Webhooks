@@ -6,11 +6,10 @@ namespace M365Webhooks
 {
 	public class Credential
 	{
-		// List of Credentials which we will use to poll the relevant APIs continually
-		private static List<Credential> _credentials = new List<Credential>();
+        #region Private Members
 
-		#region Internal Members
-
+        // List of Credentials which we will use to poll the relevant APIs continually
+        private static List<Credential> _credentials = new List<Credential>();
 		private string _tenantId;
 		private string _appId;
 		private string _oauthToken;
@@ -31,7 +30,7 @@ namespace M365Webhooks
 
         }
 
-        #region Internal Methods
+        #region Private Methods
 
         // Decode the JWT OAuth2 Token
         private JwtSecurityToken DecodeToken(string oauthToken)
@@ -77,7 +76,7 @@ namespace M365Webhooks
                 // Only dump tokens if explicitely told to save tokens ending up in logs and debug output
                 if (Configuration.DebugShowSecrets)
                 {
-                    Console.WriteLine("[{0} - {1}]: Token: {0}\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), oauthToken);
+                    Console.WriteLine("[{0} - {1}]: Token: {2}\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), oauthToken);
                     Log.WriteLine("Token: "+oauthToken);
                 }
                 else
@@ -110,7 +109,7 @@ namespace M365Webhooks
                 return false;
             }
 
-            //
+            // All good set the new token
             _oauthToken = newToken;
             _decodedOauthToken = newDecodedToken;
             return true;
@@ -202,8 +201,8 @@ namespace M365Webhooks
 		public string OauthToken { get { return _oauthToken; } }
         public string ResourceID { get { return _resourceId; } }
         public JwtSecurityToken? JWT { get { return _decodedOauthToken; } }
-        public DateTime Expires { get { return _decodedOauthToken.ValidTo; } }
-        public bool Expired { get { return CheckTokenExpired(_decodedOauthToken); } } // We declare the token as expired 15 minutes before real expire time to allow for bad time drift
+        public DateTime? Expires { get { return _decodedOauthToken.ValidTo; } }
+        public bool Expired { get { return CheckTokenExpired(_decodedOauthToken); } } // We declare the token as expired TokenExpires minutes before real expire time
         public List<Credential> Credentials { get { return _credentials; } }
 
         #endregion

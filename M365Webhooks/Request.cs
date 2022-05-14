@@ -8,7 +8,7 @@ namespace M365Webhooks
     /// </summary>
 	abstract class Request
 	{
-		#region Internal Members
+		#region Private Members
 
 		private HttpClient _httpClient;
 		private List<Credential> _credentials;
@@ -74,24 +74,21 @@ namespace M365Webhooks
 				var response = await _httpClient.SendAsync(requestMessage);
 
 				//If we get HTTP 200 from the API
-				if (response.StatusCode.Equals(HttpStatusCode.OK))
+				if (!response.StatusCode.Equals(HttpStatusCode.OK))
 				{
-					//Not empty body in response
-					if (response.Content.Headers.ContentLength > 0)
-					{
-						responseObjects.Add(response.Content);
-					}
-					else
-                    {
-						//No content exception
-						//throw
-                    }
-				}
-                else
-				{
-					//Status code not 200 exception
+					//Response not ok
 					//throw
 				}
+
+				//Not empty body in response
+				if (response.Content.Headers.ContentLength <= 0)
+				{
+					//No content exception
+					//throw
+				}
+
+				responseObjects.Add(response.Content);
+
 			}
 
 			return responseObjects;
