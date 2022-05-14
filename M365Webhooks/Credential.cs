@@ -158,10 +158,13 @@ namespace M365Webhooks
                             {
                                 try
                                 {
-                                    ClientAssertionCertificate authCert = new ClientAssertionCertificate(appId, new X509Certificate2(certPath, certPassword));
-                                    _credentials.Add(new Credential(tenantId, appId, authCert, resourceId));
-                                    found = true;
-                                    break;
+                                    if (!string.IsNullOrEmpty(certPassword))
+                                    {
+                                        ClientAssertionCertificate authCert = new ClientAssertionCertificate(appId, new X509Certificate2(certPath, certPassword));
+                                        _credentials.Add(new Credential(tenantId, appId, authCert, resourceId));
+                                        found = true;
+                                        break;
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -184,7 +187,7 @@ namespace M365Webhooks
                         // Also test every App ID with each App Secret
                         foreach (string appSecret in Configuration.AppSecret)
                         {
-                            if (!appSecret.Equals(null) && appSecret != "")
+                            if (!string.IsNullOrEmpty(appSecret))
                             {
                                 try
                                 {

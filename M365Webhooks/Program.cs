@@ -3,7 +3,7 @@
 /// Published under MIT License
 
 using M365Webhooks;
-
+CheckDefaultConfigExists();
 Log.WriteLine("M365Webhooks Process Started");
 Log.WriteLine("Press Ctrl-C to terminate");
 
@@ -13,6 +13,44 @@ List<PullPushPair> _pollPairs = new();
 // Method to run when control-c instruction to kill process received
 Console.CancelKeyPress += delegate { EndProgram(); };
 AppDomain.CurrentDomain.ProcessExit += delegate { EndProgram(); };
+
+#region Check Default Config File Exists
+
+void CheckDefaultConfigExists()
+{
+    if (!File.Exists(Environment.CurrentDirectory+"/config.json"))
+    {
+        StreamWriter? _configFileStream = new(Environment.CurrentDirectory + "/config.json", false);
+        _configFileStream.Write(@"{
+    ""AzureApplications"": {
+        ""tenantId"": [ ""00000000-bb36-48a3-a903-7c6000000000""],
+        ""appId"": [ ""00000000-2894-49c6-aee9-0b91e0000000""],
+        ""certificatePath"": [ """" ],
+        ""certificatePassword"": [ """" ],
+        ""appSecret"": [ ""a7Xkwi~igs!kdtsUWn^hSMxkrp!ydnsOpebSa3H4bFAKE"" ]
+    },
+    ""Debug"": ""true"",
+    ""DebugShowSecrets"": ""false"",
+    ""LogPath"": """",
+    ""TokenExpires"": 15,
+    ""PollingTime"": 5,
+    ""StartFetchMinutes"": 1440,
+    ""Webhooks"": {
+        ""webhookAddress"": [ ""https://yourjsonendpoint.com"" ],
+        ""webhookType"": [ ""Plain"" ],
+        ""webhookAuthType"": [ ""Blank"" ],
+        ""webhookAuth"": [ ""UHV0IHlvdXIgYmFzZTY0IGVuY29kZWQgYXV0aCB0b2tlbiBoZXJlIHBhZCA="" ],
+        ""api"": [ ""MicrosoftThreatProtection"" ],
+        ""apiMethod"": [""Incidents""]
+    }
+}");
+        _configFileStream.Flush();
+        _configFileStream.Close();
+        Log.WriteLine("config.json not found at " + Environment.CurrentDirectory + "/config.json made an example config.json at that location.", true); //Force to console
+    }
+}
+
+#endregion
 
 #region Config Sanity Checking
 

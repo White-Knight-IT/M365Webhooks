@@ -36,7 +36,7 @@
 
 			if (LoggingEnabled())
 			{
-				_logFileStream = new StreamWriter(Configuration.LogPath, true);
+				_logFileStream = new(Configuration.LogPath, true);
 				await _logFileStream.WriteLineAsync(LogTimeStamp() + line + "\n");
 				CloseLog();
 			}
