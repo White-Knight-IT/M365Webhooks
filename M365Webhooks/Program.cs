@@ -5,12 +5,14 @@
 using M365Webhooks;
 
 Log.WriteLine("M365Webhooks Process Started");
+Log.WriteLine("Press Ctrl-C to terminate");
 
 List<Thread> _threadPool = new();
 List<PullPushPair> _pollPairs = new();
 
 // Method to run when control-c instruction to kill process received
 Console.CancelKeyPress += delegate { EndProgram(); };
+AppDomain.CurrentDomain.ProcessExit += delegate { EndProgram(); };
 
 #region Config Sanity Checking
 
