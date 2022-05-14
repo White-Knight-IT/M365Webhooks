@@ -43,7 +43,7 @@ namespace M365Webhooks
 		// Set to true so we log debug events
 		public static bool Debug = true;
         #else
-		public static bool Debug = config.GetSection("Debug").Get<string>().ToLower().Equals("true");
+		public static bool Debug = _config.GetSection("Debug").Get<string>().ToLower().Equals("true");
         #endif
 		// Set to true to show secrets such as certificate passwords or OAuth2 tokens in log and console
 		public static bool DebugShowSecrets = _config.GetSection("DebugShowSecrets").Get<string>().ToLower().Equals("true");
