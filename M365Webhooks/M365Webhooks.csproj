@@ -19,6 +19,7 @@
     <None Remove="Webhooks\" />
     <None Remove="Microsoft.Extensions.Logging" />
     <None Remove="API\MicrosoftGraphSecurity.cs_" />
+    <None Remove="..\.editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.9" />
@@ -31,9 +32,6 @@
   <ItemGroup>
     <Folder Include="API\" />
     <Folder Include="Webhooks\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\.editorconfig" />
   </ItemGroup>
   <ItemGroup>
     <None Update="config.json.example">
