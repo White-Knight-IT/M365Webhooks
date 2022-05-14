@@ -4,7 +4,7 @@ namespace M365Webhooks
 {
 	public static class Configuration
 	{
-		private static readonly IConfiguration _config = new ConfigurationBuilder().AddJsonFile("/Users/hdizzle/Projects/M365Webhooks/M365Webhooks/config.json").Build();
+		private static readonly IConfiguration _config = new ConfigurationBuilder().AddJsonFile(Environment.CurrentDirectory+"/config.json").Build();
 
 		#region Non-User Configurable
 		// Sign-in Authority to get OAuth2 tokens
