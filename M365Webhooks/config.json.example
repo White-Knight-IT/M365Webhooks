@@ -1,0 +1,22 @@
+{
+    "AzureApplications": {
+        "tenantId": [ "00000000-bb36-48a3-a903-7c6000000000"],
+        "appId": [ "00000000-2894-49c6-aee9-0b91e0000000"],
+        "certificatePath": [ "" ],
+        "certificatePassword": [ "" ],
+        "appSecret": [ "a7Xkwi~igs!kdtsUWn^wmn3hSMxkrp!ydnsOpebSa3H4b" ]
+    },
+    "Debug": "true",
+    "DebugShowSecrets": "false",
+    "LogPath": "",
+    "TokenExpires": 15,
+    "PollingTime": 5,
+    "Webhooks": {
+        "webhookAddress": [ "https://yourjsonendpoint.com" ],
+        "webhookType": [ "Plain" ],
+        "webhookAuthType": [ "Blank" ],
+        "webhookAuth": [ "Base64EncodedStringHere" ],
+        "api": [ "MicrosoftThreatProtection" ],
+        "apiMethod": ["Incidents"]
+    }
+}
