@@ -8,18 +8,18 @@ namespace M365Webhooks
     /// </summary>
     public class PullPushPair
     {
-        private object _api;
-        private Type _apiType;
-        private string _apiMethod;
-        private object _webhook;
-        private Type _webhookType;
+        private readonly object? _api;
+        private readonly Type? _apiType;
+        private readonly object? _webhook;
+        private readonly Type? _webhookType;
+        private bool _cancelToken;
 
         public PullPushPair(string api, string apiMethod, string webhookAddress, string webhookType, string webhookAuthType, string webhookAuth)
         {
+            _cancelToken = false;
             _apiType = Type.GetType("M365Webhooks.API." + api);
             _webhookType = Type.GetType("M365Webhooks.Webhooks." + webhookType);
             _api = Activator.CreateInstance(_apiType);
-            _apiMethod = apiMethod;
             object[] webhookArguments;
 
             switch (webhookType)
@@ -36,17 +36,38 @@ namespace M365Webhooks
             _webhook = Activator.CreateInstance(_webhookType,webhookArguments);
         }
 
-        public async void Poll()
+        public void Poll()
         {
-            MethodInfo apiMethod = _apiType.GetMethod(_apiMethod);
+            MethodInfo apiMethod = _apiType.GetMethod(_webhookType.GetProperty("ApiMethod").GetValue(_webhook).ToString());
+            MethodInfo webhookMethod = _webhookType.GetMethod("SendWebhook");
 
-            foreach (JsonElement _j in ((Task<List<JsonElement>>)apiMethod.Invoke(_api, null)).Result)
+            while (true && !_cancelToken)
             {
-                MethodInfo webhookMethod = _webhookType.GetMethod("SendWebhook");
-                bool result = ((Task<bool>) webhookMethod.Invoke(_webhook, new object[] {_j})).Result;
-                
+                foreach (JsonElement _j in ((Task<List<JsonElement>>)apiMethod.Invoke(_api, null)).Result)
+                {
+                   
+                    if(!((Task<bool>)webhookMethod.Invoke(_webhook, new object[] { _j })).Result)
+                    {
+                        Log.WriteLine("Sending to webhook did not return HTTP 200 OK: "+_webhookType.GetProperty("WebhookAddress").GetValue(_webhook).ToString());
+                    }
+
+                }
+
+                // Causes thread to sleep for PollingTime seconds before pooling again but checks if thread cancelled every 1 second
+                for(int _i=0; _i < (Configuration.PollingTime * 1000); _i=_i+1000)
+                {
+                    if (_cancelToken)
+                        break;
+                    Thread.CurrentThread.Join(1000);
+                }
             }
         }
+
+        #region Properties
+
+        public bool CancelThread { set { _cancelToken = value;} }
+
+        #endregion
     }
 }
 

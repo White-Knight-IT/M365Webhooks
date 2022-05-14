@@ -4,16 +4,19 @@ using System.Text.Json;
 
 namespace M365Webhooks
 {
+	/// <summary>
+    /// This class can only be inherited to represent different webhook types i.e. Plain, Teams, Slack, Discord etc.
+    /// </summary>
 	abstract class Webhook
 	{
         #region Private Members
 
-        private HttpClient _httpClient;
-		private string _webhookAddress;
-		private string _api;
-		private string _apiMethod;
-		private string _authType;
-		private string _auth;
+        private readonly HttpClient _httpClient;
+		private readonly string _webhookAddress;
+		private readonly string _api;
+		private readonly string _apiMethod;
+		private readonly string _authType;
+		private readonly string _auth;
 
         #endregion
 
@@ -27,9 +30,14 @@ namespace M365Webhooks
 			_auth = auth;
 		}
 
-        #region Protected Methods
+		#region Protected Methods
 
-        private HttpRequestMessage CreateHttpRequest(HttpMethod httpMethod)
+		/// <summary>
+		/// Creates a HTTP Request to be used to send webhook payload
+		/// </summary>
+		/// <param name="httpMethod">HTTP Method such as GET, POST, PUT</param>
+		/// <returns>HttpRequestMessage to be used to send webhook</returns>
+		private HttpRequestMessage CreateHttpRequest(HttpMethod httpMethod)
 		{
 			HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, _webhookAddress);
 
@@ -54,6 +62,11 @@ namespace M365Webhooks
 			return requestMessage;
         }
 
+		/// <summary>
+        /// Checks that the HTTP code of the supplied response is HTTP 200 OK
+        /// </summary>
+        /// <param name="response">The response to check the HTTP code</param>
+        /// <returns>true/false if HTTP 200 OK was responded</returns>
 		protected bool CheckResponseHttpCode(HttpResponseMessage response)
         {
 			if (response.StatusCode.Equals(HttpStatusCode.OK))
@@ -64,6 +77,12 @@ namespace M365Webhooks
 			return false;
 		}
 
+		/// <summary>
+        /// Sends the webhook payload
+        /// </summary>
+        /// <param name="httpMethod">HTTP Method such as GET, POST, PUT etc.</param>
+        /// <param name="jsonBody">The JSON object you want to send in webhook</param>
+        /// <returns>HTTP Response</returns>
 		protected async Task<HttpResponseMessage> Send(HttpMethod httpMethod, object jsonBody)
         {
 
@@ -79,9 +98,10 @@ namespace M365Webhooks
 
         public string Api { get { return _api; } }
 		public string ApiMethod { get { return _apiMethod; } }
+		public string WebhookAddress { get { return _webhookAddress; } }
 
-        #endregion
+		#endregion
 
-    }
+	}
 }
 

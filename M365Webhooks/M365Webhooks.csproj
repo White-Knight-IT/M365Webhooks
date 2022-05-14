@@ -32,4 +32,7 @@
     <Folder Include="API\" />
     <Folder Include="Webhooks\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.editorconfig" />
+  </ItemGroup>
 </Project>

@@ -1,17 +1,17 @@
 ﻿namespace M365Webhooks
 {
-    public class EmployeeListNotFoundException : Exception
+    public class NotEnoughArguments : Exception
     {
-        public EmployeeListNotFoundException()
+        public NotEnoughArguments()
         {
         }
 
-        public EmployeeListNotFoundException(string message)
+        public NotEnoughArguments(string message)
             : base(message)
         {
         }
 
-        public EmployeeListNotFoundException(string message, Exception inner)
+        public NotEnoughArguments(string message, Exception inner)
             : base(message, inner)
         {
         }

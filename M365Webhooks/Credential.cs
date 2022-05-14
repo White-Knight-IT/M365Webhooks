@@ -9,13 +9,13 @@ namespace M365Webhooks
         #region Private Members
 
         // List of Credentials which we will use to poll the relevant APIs continually
-        private static List<Credential> _credentials = new List<Credential>();
-		private string _tenantId;
-		private string _appId;
+        private static readonly List<Credential> _credentials = new List<Credential>();
+		private readonly string _tenantId;
+		private readonly string _appId;
 		private string _oauthToken;
         private JwtSecurityToken? _decodedOauthToken;
-        private object _credential;
-        private string _resourceId;
+        private readonly object _credential;
+        private readonly string _resourceId;
 
         #endregion
 
@@ -52,7 +52,6 @@ namespace M365Webhooks
 
             if (Configuration.Debug)
             {
-                Console.WriteLine("[{0} - {1}]: Attempting to get token for Tenant ID: {2} and App ID: {3}\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), _tenantId, _appId);
                 Log.WriteLine("Attempting to get token for Tenant ID: "+_tenantId+" and App ID: "+_appId);
             }
 
@@ -75,14 +74,12 @@ namespace M365Webhooks
             {
                 // Only dump tokens if explicitely told to save tokens ending up in logs and debug output
                 if (Configuration.DebugShowSecrets)
-                {
-                    Console.WriteLine("[{0} - {1}]: Token: {2}\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), oauthToken);
+                { 
                     Log.WriteLine("Token: "+oauthToken);
                 }
                 else
                 {
-                    Console.WriteLine("[{0} - {1}]: Token: [Show Secrets = false]\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString());
-                    Log.WriteLine("Token: [Show Secrets = false]");
+                    Log.WriteLine("Token: [DebugShowSecrets = false]");
                 }
             }
             return oauthToken;
@@ -91,6 +88,10 @@ namespace M365Webhooks
 
         #region Public Methods
 
+        /// <summary>
+        /// Forces a new fetch of an OAuth2 token
+        /// </summary>
+        /// <returns>true/false represents if a new token was sucessfully retrieved</returns>
 		public bool RefreshToken()
         {
 			string newToken = GetToken();
@@ -119,6 +120,11 @@ namespace M365Webhooks
 
         #region Public Static Methods
 
+        /// <summary>
+        /// Find credentials that work for the given TenantIds and AppIds
+        /// </summary>
+        /// <param name="resourceId"></param>
+        /// <returns>A list of working credentials</returns>
 		public static List<Credential> GetCredentials(string resourceId)
         {
             // Clear any existing credentials
@@ -158,8 +164,15 @@ namespace M365Webhooks
                                     break;
                                 }
                                 catch (Exception ex)
-                                { 
-                                    //throw;
+                                {
+                                    if (Configuration.DebugShowSecrets)
+                                    {
+                                        Log.WriteLine("Exception applying password to Certificate: " + certPath + " Password: " + certPassword + " Exception: " + ex.Message +" Inner Exception:" + ex.InnerException + " Source: " +ex.Source);
+                                    }
+                                    else
+                                    {
+                                        Log.WriteLine("Exception applying password to Certificate: " + certPath + " Password: [DebugShowSecrets = false] Exception: " + ex.Message + " Inner Exception:" + ex.InnerException + " Source: " + ex.Source);
+                                    }
                                 }
                             }
                         }
@@ -182,7 +195,14 @@ namespace M365Webhooks
                                 }
                                 catch (Exception ex)
                                 {
-                                    //throw;
+                                    if (Configuration.DebugShowSecrets)
+                                    {
+                                        Log.WriteLine("Exception using app secret: " + appSecret + " TenantID: "+tenantId+" AppID: "+appId+" Exception: " + ex.Message + " Inner Exception:" + ex.InnerException + " Source: " + ex.Source);
+                                    }
+                                    else
+                                    {
+                                        Log.WriteLine("Exception using app secret: [DebugShowSecrets = false] TenantID: " + tenantId + " AppID: " + appId + " Exception: " + ex.Message + " Inner Exception:" + ex.InnerException + " Source: " + ex.Source);
+                                    }
                                 }
                             }
                         }

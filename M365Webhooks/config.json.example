@@ -4,18 +4,19 @@
         "appId": [ "00000000-2894-49c6-aee9-0b91e0000000"],
         "certificatePath": [ "" ],
         "certificatePassword": [ "" ],
-        "appSecret": [ "a7Xkwi~igs!kdtsUWn^wmn3hSMxkrp!ydnsOpebSa3H4b" ]
+        "appSecret": [ "a7Xkwi~igs!kdtsUWn^hSMxkrp!ydnsOpebSa3H4bFAKE" ]
     },
     "Debug": "true",
     "DebugShowSecrets": "false",
     "LogPath": "",
     "TokenExpires": 15,
     "PollingTime": 5,
+    "StartFetchMinutes": 1440,
     "Webhooks": {
         "webhookAddress": [ "https://yourjsonendpoint.com" ],
         "webhookType": [ "Plain" ],
         "webhookAuthType": [ "Blank" ],
-        "webhookAuth": [ "Base64EncodedStringHere" ],
+        "webhookAuth": [ "UHV0IHlvdXIgYmFzZTY0IGVuY29kZWQgYXV0aCB0b2tlbiBoZXJlIHBhZCA=" ],
         "api": [ "MicrosoftThreatProtection" ],
         "apiMethod": ["Incidents"]
     }

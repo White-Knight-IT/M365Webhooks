@@ -10,10 +10,10 @@ namespace M365Webhooks
 	{
 		#region Private Members
 
-		private HttpClient _httpClient;
-		private List<Credential> _credentials;
+		private readonly HttpClient _httpClient;
+		private readonly List<Credential> _credentials;
 
-		//Request will only  seek data that is >= this time
+		//Request will only seek data that is >= this time
 		private string _lastRequestTime;
 
         #endregion
@@ -24,7 +24,7 @@ namespace M365Webhooks
 			_httpClient = new HttpClient();
 
 			//On first run we get all incidents in the last 24 hours
-			_lastRequestTime = DateTime.Now.ToUniversalTime().AddHours(-24).ToString("o");
+			_lastRequestTime = DateTime.Now.ToUniversalTime().AddMinutes(-Configuration.StartFetchMinutes).ToString("o");
 		}
 
 		#region Protected Methods
@@ -48,8 +48,15 @@ namespace M365Webhooks
 					if(!_c.RefreshToken())
                     {
 						// We were not successful refreshing
-						
-						break;
+						if (Configuration.DebugShowSecrets)
+						{
+							Log.WriteLine("Failed to refresh expired token: " + _c.OauthToken);
+						}
+						else
+                        {
+							Log.WriteLine("Failed to refresh expired token: [DebugShowSecrets = false]");
+						}
+						continue;
                     }
                 }
 				//If we specify debug level loging we will log here
@@ -57,13 +64,11 @@ namespace M365Webhooks
 				{
 					if(Configuration.DebugShowSecrets)
 					{
-						Console.WriteLine("[{0} - {1}]: Sending Request via URL: {2}, for Tennant ID: {3}, Application ID: {4}, using OAuth2 Token: {5}\n", DateTime.Now.ToShortDateString(),DateTime.Now.ToLongTimeString(), url, _c.TenantId, _c.AppId, _c.OauthToken);
 						Log.WriteLine("Sending Request via URL: "+ url + ", for Tennant ID: "+_c.TenantId+", Application ID: "+_c.AppId+", using OAuth2 Token: "+_c.OauthToken);
 					}
 					else
                     {
-						Console.WriteLine("[{0} - {1}]: Sending Request via URL: {2}, for Tennant ID: {3}, Application ID: {4}, using OAuth2 Token: [Show Secrets = false]\n", DateTime.Now.ToShortDateString(), DateTime.Now.ToLongTimeString(), url, _c.TenantId, _c.AppId);
-						Log.WriteLine("Sending Request via URL: " + url + ", for Tennant ID: " + _c.TenantId + ", Application ID: " + _c.AppId + ", using OAuth2 Token: [Show Secrets = false]");
+						Log.WriteLine("Sending Request via URL: " + url + ", for Tennant ID: " + _c.TenantId + ", Application ID: " + _c.AppId + ", using OAuth2 Token: [DebugShowSecrets = false]");
 					}
 					
 				}
@@ -73,18 +78,18 @@ namespace M365Webhooks
 
 				var response = await _httpClient.SendAsync(requestMessage);
 
-				//If we get HTTP 200 from the API
+				//If we dont get get HTTP 200 from the API
 				if (!response.StatusCode.Equals(HttpStatusCode.OK))
 				{
-					//Response not ok
-					//throw
+					Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: "+response.StatusCode.ToString());
+					continue;
 				}
 
-				//Not empty body in response
+				//Empty body in response
 				if (response.Content.Headers.ContentLength <= 0)
 				{
-					//No content exception
-					//throw
+					Log.WriteLine("Did not get any content from: " + url);
+					continue;
 				}
 
 				responseObjects.Add(response.Content);
