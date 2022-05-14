@@ -3,7 +3,9 @@
 /// Published under MIT License
 
 using M365Webhooks;
+
 CheckDefaultConfigExists();
+
 Log.WriteLine("M365Webhooks Process Started");
 Log.WriteLine("Press Ctrl-C to terminate");
 
@@ -18,10 +20,17 @@ AppDomain.CurrentDomain.ProcessExit += delegate { EndProgram(); };
 
 void CheckDefaultConfigExists()
 {
-    if (!File.Exists(Environment.CurrentDirectory+"/config.json"))
+    if (!File.Exists(Environment.CurrentDirectory + "/config.json"))
     {
-        StreamWriter? _configFileStream = new(Environment.CurrentDirectory + "/config.json", false);
-        _configFileStream.Write(@"{
+        if (File.Exists(Environment.CurrentDirectory + "/config.json.example"))
+        {
+            File.Copy(Environment.CurrentDirectory + "/config.json.example", Environment.CurrentDirectory + "/config.json");
+            Log.WriteLine("config.json not found at " + Environment.CurrentDirectory + "/config.json copied from config.json.example at that location.", true); //Force to console
+        }
+        else
+        {
+            StreamWriter? _configFileStream = new(Environment.CurrentDirectory + "/config.json", false);
+            _configFileStream.Write(@"{
     ""AzureApplications"": {
         ""tenantId"": [ ""00000000-bb36-48a3-a903-7c6000000000""],
         ""appId"": [ ""00000000-2894-49c6-aee9-0b91e0000000""],
@@ -44,9 +53,11 @@ void CheckDefaultConfigExists()
         ""apiMethod"": [""Incidents""]
     }
 }");
-        _configFileStream.Flush();
-        _configFileStream.Close();
-        Log.WriteLine("config.json not found at " + Environment.CurrentDirectory + "/config.json made an example config.json at that location.", true); //Force to console
+            _configFileStream.Flush();
+            _configFileStream.Close();
+            Log.WriteLine("config.json not found at " + Environment.CurrentDirectory + "/config.json made an example config.json at that location.", true); //Force to console
+
+        }
     }
 }
 

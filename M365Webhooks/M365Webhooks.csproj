@@ -35,4 +35,9 @@
   <ItemGroup>
     <None Include="..\.editorconfig" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="config.json.example">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
