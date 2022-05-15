@@ -12,10 +12,11 @@ namespace M365Webhooks.API
 
 		//The resource we obtain our JWT OAuth2 token for
 		public const string ResourceId = "https://api.security.microsoft.com";
+		private static readonly string[] _roles = new string[] { "Incident.Read.All","AdvancedHunting.Read.All" };
 
         #endregion
 
-        public MicrosoftThreatProtection():base(ResourceId)
+        public MicrosoftThreatProtection():base(ResourceId, _roles)
 		{
 
 		}

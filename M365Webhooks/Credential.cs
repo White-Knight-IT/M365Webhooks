@@ -1,6 +1,7 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.Security.Cryptography.X509Certificates;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace M365Webhooks
 {
@@ -84,6 +85,37 @@ namespace M365Webhooks
             }
             return oauthToken;
 		}
+
+        /// <summary>
+        /// Match roles listed in token claim against supplied expected roles
+        /// </summary>
+        /// <param name="roleCheck">The roles we expect the token to have</param>
+        /// <param name="claims">The claims including the roles the token has</param>
+        /// <returns>true/false the token has all expected claims</returns>
+        private static bool CheckRoles(string[] roleCheck, List<Claim> claims)
+        {
+            int roleHit = 0;
+
+            foreach (string _s in roleCheck)
+            {
+                foreach (Claim _cl in claims)
+                {
+                    if (_cl.Value.Equals(_s))
+                    {
+                        roleHit++;
+
+                        // If we find the token has as many matching roles as expected we add it to the list to use
+                        if (roleHit == roleCheck.Length)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         #endregion
 
         #region Public Methods
@@ -125,7 +157,7 @@ namespace M365Webhooks
         /// </summary>
         /// <param name="resourceId"></param>
         /// <returns>A list of working credentials</returns>
-		public static List<Credential> GetCredentials(string resourceId)
+		public static List<Credential> GetCredentials(string resourceId, string[] roleCheck)
         {
             // Clear any existing credentials
             _credentials.Clear();
@@ -147,7 +179,13 @@ namespace M365Webhooks
                         {
                             // Try certificate with no password first
                             ClientAssertionCertificate authCert = new ClientAssertionCertificate(appId, new X509Certificate2(certPath));
-                            _credentials.Add(new Credential(tenantId, appId, authCert, resourceId));
+                            Credential credential = new Credential(tenantId, appId, authCert, resourceId);
+
+                            if (CheckRoles(roleCheck, credential.JWT.Claims.ToList()))
+                            {
+                                _credentials.Add(credential);
+                            }
+
                             found = true;
                             break;
                         }
@@ -161,7 +199,13 @@ namespace M365Webhooks
                                     if (!string.IsNullOrEmpty(certPassword))
                                     {
                                         ClientAssertionCertificate authCert = new ClientAssertionCertificate(appId, new X509Certificate2(certPath, certPassword));
-                                        _credentials.Add(new Credential(tenantId, appId, authCert, resourceId));
+                                        Credential credential = new Credential(tenantId, appId, authCert, resourceId);
+
+                                        if (CheckRoles(roleCheck, credential.JWT.Claims.ToList()))
+                                        {
+                                            _credentials.Add(credential);
+                                        }
+
                                         found = true;
                                         break;
                                     }
@@ -192,7 +236,13 @@ namespace M365Webhooks
                                 try
                                 {
                                     ClientCredential clientCredential = new ClientCredential(appId, appSecret);
-                                    _credentials.Add(new Credential(tenantId, appId, clientCredential, resourceId));
+                                    Credential credential = new Credential(tenantId, appId, clientCredential, resourceId);
+
+                                    if (CheckRoles(roleCheck, credential.JWT.Claims.ToList()))
+                                    {
+                                        _credentials.Add(credential);
+                                    }
+
                                     found = true;
                                     break;
                                 }

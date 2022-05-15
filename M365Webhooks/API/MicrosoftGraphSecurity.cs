@@ -13,10 +13,11 @@ namespace M365Webhooks.API
 		//The resource we obtain our JWT OAuth2 token for
 		public const string ResourceId = "https://graph.microsoft.com";
 		public const string ApiVersion = "v1.0";
+		private static readonly string[] _roles = new string[] { "ActivityFeed.Read", "ActivityFeed.ReadDlp", "ServiceHealth.Read" };
 
-        #endregion
+		#endregion
 
-        public MicrosoftGraphSecurity():base(ResourceId)
+		public MicrosoftGraphSecurity():base(ResourceId, _roles)
 		{
 
 		}

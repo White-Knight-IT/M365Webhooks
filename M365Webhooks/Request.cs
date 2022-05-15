@@ -18,9 +18,9 @@ namespace M365Webhooks
 
         #endregion
 
-        public Request(string resourceId)
+        public Request(string resourceId, string[] roleCheck)
 		{
-			_credentials = Credential.GetCredentials(resourceId);
+			_credentials = Credential.GetCredentials(resourceId, roleCheck);
 			_httpClient = new HttpClient();
 
 			//On first run we get all incidents in the last 24 hours
@@ -42,8 +42,11 @@ namespace M365Webhooks
 			//Send a request to the API for every credential
 			foreach (Credential _c in _credentials)
 			{
+				// Inject any credential information into tghe URL string
+                url = url.Replace("{TENANTID}", _c.TenantId);
+
 				// Check token not expired
-				if(_c.Expired)
+				if (_c.Expired)
                 {
 					if(!_c.RefreshToken())
                     {

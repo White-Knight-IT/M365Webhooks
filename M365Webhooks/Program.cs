@@ -3,6 +3,7 @@
 /// Published under MIT License
 
 using M365Webhooks;
+using M365Webhooks.API;
 
 CheckDefaultConfigExists();
 
@@ -13,7 +14,7 @@ List<Thread> _threadPool = new();
 List<PullPushPair> _pollPairs = new();
 
 // Method to run when control-c instruction to kill process received
-Console.CancelKeyPress += delegate { EndProgram(); };
+Console.CancelKeyPress += delegate { EndProgram(true); };
 AppDomain.CurrentDomain.ProcessExit += delegate { EndProgram(); };
 
 #region Check Default Config File Exists
@@ -22,11 +23,13 @@ void CheckDefaultConfigExists()
 {
     if (!File.Exists(Environment.CurrentDirectory + "/config.json"))
     {
+        // We will move existing config.json.example into config.json
         if (File.Exists(Environment.CurrentDirectory + "/config.json.example"))
         {
             File.Copy(Environment.CurrentDirectory + "/config.json.example", Environment.CurrentDirectory + "/config.json");
             Log.WriteLine("config.json not found at " + Environment.CurrentDirectory + "/config.json copied from config.json.example at that location.", true); //Force to console
         }
+        // No config.json.example to move so we will just create a config.json using hardcoded values
         else
         {
             StreamWriter? _configFileStream = new(Environment.CurrentDirectory + "/config.json", false);
@@ -145,14 +148,16 @@ try
     // Do some very light sanity checking of config.json
     SanityCheckConfig();
 
+    new Office365Management();
+
     // Build PullPushPairs based on webhook outputs
     for (int _i = 0; _i < Configuration.WebhookAddress.Length; _i++)
     {
         // Spawn a new thread for each PullPushPair so that they can operate at their own time and are not bound by eachother
-        _pollPairs.Add(new PullPushPair(Configuration.Api[_i], Configuration.ApiMethod[_i], Configuration.WebhookAddress[_i], Configuration.WebhookType[_i], Configuration.WebhookAuthType[_i], Configuration.WebhookAuth[_i]));
+        /*_pollPairs.Add(new PullPushPair(Configuration.Api[_i], Configuration.ApiMethod[_i], Configuration.WebhookAddress[_i], Configuration.WebhookType[_i], Configuration.WebhookAuthType[_i], Configuration.WebhookAuth[_i]));
         Thread thread = new(new ThreadStart(_pollPairs[_i].Poll));
         _threadPool.Add(thread);
-        thread.Start();
+        thread.Start();*/
     }
 }
 catch (Exception ex)
@@ -163,8 +168,9 @@ catch (Exception ex)
 
 
 // Instruct our threads to die and once all threads are dead the process exits with error 0
-void EndProgram()
+void EndProgram(bool cancelClick = false)
 {
+
     bool threadsAlive = true;
 
     foreach (PullPushPair poller in _pollPairs)
@@ -182,8 +188,14 @@ void EndProgram()
         }
     }
 
-    Log.WriteLine("M365Webhooks Process Ended");
+    if (cancelClick)
+    {
+        // Exit without error code
+        Environment.Exit(0);
+    }
+    else
+    {
+        Log.WriteLine("M365Webhooks Process Ended");
+    }
 
-    // Exit without error code
-    Environment.Exit(0);
 }
