@@ -3,9 +3,9 @@
 namespace M365Webhooks.API
 {
 	/// <summary>
-    /// A class to represent the Microsoft Threat Protection API
-    /// ### Permissions Required: Incident.Read.All ###
-    /// </summary>
+	/// A class to represent the Microsoft Threat Protection API
+	/// ### Permissions Required: Incident.Read.All, AdvancedHunting.Read.All ###
+	/// </summary>
 	internal class MicrosoftThreatProtection : Request
 	{
 		#region Private Members

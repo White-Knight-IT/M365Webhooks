@@ -84,37 +84,7 @@ namespace M365Webhooks
                 }
             }
             return oauthToken;
-		}
-
-        /// <summary>
-        /// Match roles listed in token claim against supplied expected roles
-        /// </summary>
-        /// <param name="roleCheck">The roles we expect the token to have</param>
-        /// <param name="claims">The claims including the roles the token has</param>
-        /// <returns>true/false the token has all expected claims</returns>
-        private static bool CheckRoles(string[] roleCheck, List<Claim> claims)
-        {
-            int roleHit = 0;
-
-            foreach (string _s in roleCheck)
-            {
-                foreach (Claim _cl in claims)
-                {
-                    if (_cl.Value.Equals(_s))
-                    {
-                        roleHit++;
-
-                        // If we find the token has as many matching roles as expected we add it to the list to use
-                        if (roleHit == roleCheck.Length)
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
+		}      
 
         #endregion
 
@@ -153,7 +123,7 @@ namespace M365Webhooks
         #region Public Static Methods
 
         /// <summary>
-        /// Find credentials that work for the given TenantIds and AppIds
+        /// Iterate through user supplied configuration to find credentials that work for the given TenantIds and AppIds and Api Roles
         /// </summary>
         /// <param name="resourceId"></param>
         /// <returns>A list of working credentials</returns>
@@ -162,7 +132,30 @@ namespace M365Webhooks
             // Clear any existing credentials
             _credentials.Clear();
 
-            // Iterate through all the user supplied configuration to find working credentials and build them into a list
+            // Check the roles on the token against what the API expects, return true if the token has all expected roles
+            static bool CheckRoles(string[] roleCheck, List<Claim> claims)
+            {
+                int roleHit = 0;
+
+                foreach (string _s in roleCheck)
+                {
+                    foreach (Claim _cl in claims)
+                    {
+                        if (_cl.Value.Equals(_s))
+                        {
+                            roleHit++;
+
+                            // If we find the token has as many matching roles as expected we add it to the list to use
+                            if (roleHit == roleCheck.Length)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                return false;
+            }
 
             // Test each Tenant ID
             foreach (string tenantId in Configuration.TenantId)

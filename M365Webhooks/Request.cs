@@ -37,13 +37,15 @@ namespace M365Webhooks
 		/// <returns>Returns a task containing a list of HttpContent objects for consumption by the inheriting superclass</returns>
 		protected async Task<List<HttpContent>> SendRequest(string url, HttpMethod httpMethod)
         {
-			List<HttpContent> responseObjects = new List<HttpContent>();
+			string originUrl = url;
+
+			List<HttpContent> responseObjects = new();
 
 			//Send a request to the API for every credential
 			foreach (Credential _c in _credentials)
 			{
-				// Inject any credential information into tghe URL string
-                url = url.Replace("{TENANTID}", _c.TenantId);
+				// Inject any credential information into the URL string
+                url = originUrl.Replace("{TENANTID}", _c.TenantId);
 
 				// Check token not expired
 				if (_c.Expired)

@@ -47,6 +47,7 @@ void CheckDefaultConfigExists()
     ""TokenExpires"": 15,
     ""PollingTime"": 5,
     ""StartFetchMinutes"": 1440,
+    ""PublisherIdentifier"": ""b03a4cb9-04f0-4f91-9061-961f77277f3c"",
     ""Webhooks"": {
         ""webhookAddress"": [ ""https://yourjsonendpoint.com"" ],
         ""webhookType"": [ ""Plain"" ],

@@ -3,9 +3,9 @@
 namespace M365Webhooks.API
 {
 	/// <summary>
-    /// A class to represent the Microsoft Threat Protection API
-    /// ### Permissions Required: Incident.Read.All ###
-    /// </summary>
+	/// A class to represent the Office 365 Management API
+	/// ### Permissions Required: ActivityFeed.Read, ActivityFeed.ReadDlp, ServiceHealth.Read ###
+	/// </summary>
 	internal class Office365Management : Request
 	{
 		#region Private Members
@@ -14,7 +14,8 @@ namespace M365Webhooks.API
 		public const string ResourceId = "https://manage.office.com/";
 		public const string ApiVersion = "v1.0";
 		private static readonly string[] _roles = new string[] { "ActivityFeed.Read", "ActivityFeed.ReadDlp", "ServiceHealth.Read" };
-		private int _tenantsSubscribed;
+		private readonly int _tenantsSubscribed;
+		private readonly string[] _contentTypes = new string[] { "Audit.AzureActiveDirectory", "Audit.Exchange", "Audit.SharePoint", "Audit.General", "DLP.All" };
 
 		#endregion
 
@@ -26,10 +27,17 @@ namespace M365Webhooks.API
             {
 				Log.WriteLine(_tenantsSubscribed.ToString()+" subscribed to Office 365 Management API activity feed");
             }
+
+			Activities();
+			Thread.CurrentThread.Join(300000);
 		}
 
 		#region Private Methods
 
+		/// <summary>
+        /// Subscribes to the Office 365 Management API activity feed for all catagories, across all tenants
+        /// </summary>
+        /// <returns>Number of tenants subscribed</returns>
 		private async Task<int> Subscribe()
         {
 			if (Configuration.Debug)
@@ -37,14 +45,19 @@ namespace M365Webhooks.API
 				Log.WriteLine("It may be expected to see some HTTP 400 BadRequest responses below if we are already subscribed for the activity feeds");
 			}
 
-			// Subscribe to all the things (It will give HTTP 400 if already subscribed so we may see some bad request errors to ignore)
-			await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType=Audit.AzureActiveDirectory", HttpMethod.Post); //+DateTime.Now.ToUniversalTime().AddDays(-30).ToString("o") SUB -> ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType=Audit.Exchange"
-			await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType=Audit.Exchange", HttpMethod.Post);
-			await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType=Audit.SharePoint", HttpMethod.Post);
-			await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType=DLP.All", HttpMethod.Post);
+			// Subscribe to our specified content type
+			async Task<List<HttpContent>> SendSubscribe(string contentType)
+            {
+				return await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType="+contentType+"&PublisherIdentifier=" + Configuration.PublisherIdentifier, HttpMethod.Post);
+			}
+
+			foreach(string _s in _contentTypes)
+            {
+				await SendSubscribe(_s);
+            }
 
 			// List subscriptions
-			List<HttpContent> response = await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/list", HttpMethod.Get);
+			List<HttpContent> response = await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/list?PublisherIdentifier=" + Configuration.PublisherIdentifier, HttpMethod.Get);
 
 			int subsTally = 0;
 
@@ -63,7 +76,7 @@ namespace M365Webhooks.API
 						Log.WriteLine(_v.ToString());
 					}
 
-					if(_v.EnumerateObject().FirstOrDefault(p => p.Name == "status").Value.ToString().ToLower().Equals("enabled"))
+					if(_v.EnumerateObject().FirstOrDefault(p => p.Name == "status").Value.GetString().ToLower().Equals("enabled"))
                     {
 						enabledSubs++;
                     }
@@ -86,26 +99,70 @@ namespace M365Webhooks.API
 		/// Gets incidents from https://api.security.microsoft.com/api/incidents
 		/// </summary>
 		/// <returns>List of JSON Objects, each Object is an Incident see https://docs.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents?view=o365-worldwide</returns>
-		public async Task<List<JsonElement>> Incidents()
+		public async Task<List<JsonElement>> Activities()
         {
-			DateTime nowTime = DateTime.Now;
+			string nowTime = DateTime.Now.ToUniversalTime().ToString("o").Split('.')[0];
+			LastRequestTime = LastRequestTime.Split('.')[0];
 
-			List<HttpContent> responseContent = await SendRequest(ResourceId+ "/api/incidents?$filter=lastUpdateTime+ge+"+LastRequestTime,HttpMethod.Get);
-			LastRequestTime = nowTime.ToUniversalTime().ToString("o");
-            List<JsonElement> incidents = new();
+			// The API returns 400 BadRequest if our start/end times are so much as 1 second over a 24h spread
+			if(DateTime.Parse(nowTime).CompareTo((DateTime.Parse(LastRequestTime).AddHours(24)))>0)
+            {
+				// Reduce our time spread to precisely 24h to satisfy the API
+				nowTime= DateTime.Parse(LastRequestTime).AddHours(24).ToString("o").Split('.')[0];
 
-			//We will get 
+			}
+
+			// Get the Activities for our specified content type
+			async Task<List<HttpContent>> GetActivities(string contentType)
+            {
+				return await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/content?contentType="+contentType+"&PublisherIdentifier=" + Configuration.PublisherIdentifier + "&startTime=" + LastRequestTime + "&endTime=" + nowTime, HttpMethod.Get);
+			}
+
+			List<HttpContent> responseContent = new();
+
+			foreach (string _s in _contentTypes)
+            {
+				// Microsoft paginates if there are over 100 entries so we check for NextPageUri header which directs us
+				async void IteratePages(HttpContent httpContent)
+				{
+					string nextPageUrl = String.Empty;
+
+					responseContent.Add(httpContent);
+
+					while (httpContent.Headers.TryGetValues("NextPageUri", out var nextPage))
+					{
+						nextPageUrl = nextPage.First();
+
+						foreach (HttpContent _h in await SendRequest(nextPageUrl, HttpMethod.Get))
+                        {
+							httpContent = _h;
+							responseContent.Add(httpContent);
+						}
+
+					}
+
+				}
+
+				foreach (HttpContent _h in await GetActivities(_s))
+                {
+					IteratePages(_h);
+                }
+			}
+
+			LastRequestTime = nowTime;
+            List<string> activities = new();
+
+			// Get the activity urls out into a list for us to request
 			foreach (HttpContent _h in responseContent)
 			{
 				JsonDocument jsonDoc = await JsonDocument.ParseAsync(await _h.ReadAsStreamAsync());
-				var value = jsonDoc.RootElement.EnumerateObject().FirstOrDefault(p => p.Name == "value");
-				foreach (JsonElement _v in value.Value.EnumerateArray())
+				foreach (JsonElement _v in jsonDoc.RootElement.EnumerateArray())
 				{
-					incidents.Add(_v);
+					activities.Add(_v.EnumerateObject().FirstOrDefault(p => p.Name == "contentUri").Value.GetString()); ;
 				}
 
 			}
-			return incidents;
+			return new List<JsonElement>();
 		}
 
         #endregion
