@@ -11,7 +11,7 @@ namespace M365Webhooks
 		#region Private Members
 
 		private readonly HttpClient _httpClient;
-		private readonly List<Credential> _credentials;
+		private readonly Dictionary<string,Credential> _credentials;
 
 		//Request will only seek data that is >= this time
 		private string _lastRequestTime;
@@ -34,70 +34,90 @@ namespace M365Webhooks
 		/// </summary>
 		/// <param name="url">The API endpoint the HTTP request will be sent</param>
 		/// <param name="httpMethod">HTTP request method i.e GET, PATCH, POST, PUT or DELETE</param>
+		/// <param name="tenantId" [optional=""]>If set with a TenantID the request is pinned to a specific tenant credential</param>
 		/// <returns>Returns a task containing a list of HttpContent objects for consumption by the inheriting superclass</returns>
-		protected async Task<List<HttpContent>> SendRequest(string url, HttpMethod httpMethod)
+		protected async Task<List<HttpContent>> SendRequest(string url, HttpMethod httpMethod, string tenantId="")
         {
 			string originUrl = url;
 
 			List<HttpContent> responseObjects = new();
 
-			//Send a request to the API for every credential
-			foreach (Credential _c in _credentials)
-			{
-				// Inject any credential information into the URL string
-                url = originUrl.Replace("{TENANTID}", _c.TenantId);
 
-				// Check token not expired
-				if (_c.Expired)
-                {
-					if(!_c.RefreshToken())
-                    {
-						// We were not successful refreshing
+			//Send a request to the API for every credential
+			foreach (Credential _c in _credentials.Values.ToList())
+			{
+				Credential useForRequest = _c;
+
+				async Task<bool> GetContent()
+				{
+					
+					// Inject any credential information into the URL string
+					url = originUrl.Replace("{TENANTID}", useForRequest.TenantId);
+
+					// Check token not expired
+					if (useForRequest.Expired)
+					{
+						if (!useForRequest.RefreshToken())
+						{
+							// We were not successful refreshing
+							if (Configuration.DebugShowSecrets)
+							{
+								Log.WriteLine("Failed to refresh expired token: " + useForRequest.OauthToken);
+							}
+							else
+							{
+								Log.WriteLine("Failed to refresh expired token: [DebugShowSecrets = false]");
+							}
+							return false;
+						}
+					}
+
+					//If we specify debug level loging we will log here
+					if (Configuration.Debug)
+					{
 						if (Configuration.DebugShowSecrets)
 						{
-							Log.WriteLine("Failed to refresh expired token: " + _c.OauthToken);
+							Log.WriteLine("Sending Request via URL: " + url + ", for Tennant ID: " + useForRequest.TenantId + ", Application ID: " + useForRequest.AppId + ", using OAuth2 Token: " + useForRequest.OauthToken);
 						}
 						else
-                        {
-							Log.WriteLine("Failed to refresh expired token: [DebugShowSecrets = false]");
+						{
+							Log.WriteLine("Sending Request via URL: " + url + ", for Tennant ID: " + useForRequest.TenantId + ", Application ID: " + useForRequest.AppId + ", using OAuth2 Token: [DebugShowSecrets = false]");
 						}
-						continue;
-                    }
-                }
-				//If we specify debug level loging we will log here
-				if (Configuration.Debug)
-				{
-					if(Configuration.DebugShowSecrets)
+
+					}
+
+					var requestMessage = new HttpRequestMessage(httpMethod, url);
+					requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", useForRequest.OauthToken);
+
+					var response = await _httpClient.SendAsync(requestMessage);
+
+					//If we dont get get HTTP 200 from the API
+					if (!response.StatusCode.Equals(HttpStatusCode.OK))
 					{
-						Log.WriteLine("Sending Request via URL: "+ url + ", for Tennant ID: "+_c.TenantId+", Application ID: "+_c.AppId+", using OAuth2 Token: "+_c.OauthToken);
+						Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
+						return false;
 					}
-					else
-                    {
-						Log.WriteLine("Sending Request via URL: " + url + ", for Tennant ID: " + _c.TenantId + ", Application ID: " + _c.AppId + ", using OAuth2 Token: [DebugShowSecrets = false]");
+
+					//Empty body in response
+					if (response.Content.Headers.ContentLength <= 0)
+					{
+						Log.WriteLine("Did not get any content from: " + url);
+						return false;
 					}
-					
+
+					responseObjects.Add(response.Content);
+					return true;
 				}
 
-				var requestMessage = new HttpRequestMessage(httpMethod, url);
-				requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _c.OauthToken);
-
-				var response = await _httpClient.SendAsync(requestMessage);
-
-				//If we dont get get HTTP 200 from the API
-				if (!response.StatusCode.Equals(HttpStatusCode.OK))
+				// Pinned to a single tenantId, send with only that credential then break loop
+				if (tenantId != "")
 				{
-					Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: "+response.StatusCode.ToString());
-					continue;
+					useForRequest = _credentials[tenantId];
+					await GetContent();
+					break;
 				}
 
-				//Empty body in response
-				if (response.Content.Headers.ContentLength <= 0)
-				{
-					Log.WriteLine("Did not get any content from: " + url);
-					continue;
-				}
-
-				responseObjects.Add(response.Content);
+				await GetContent();
 
 			}
 

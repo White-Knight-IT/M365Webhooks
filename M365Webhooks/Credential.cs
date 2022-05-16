@@ -9,8 +9,6 @@ namespace M365Webhooks
 	{
         #region Private Members
 
-        // List of Credentials which we will use to poll the relevant APIs continually
-        private static readonly List<Credential> _credentials = new List<Credential>();
 		private readonly string _tenantId;
 		private readonly string _appId;
 		private string _oauthToken;
@@ -127,10 +125,9 @@ namespace M365Webhooks
         /// </summary>
         /// <param name="resourceId"></param>
         /// <returns>A list of working credentials</returns>
-		public static List<Credential> GetCredentials(string resourceId, string[] roleCheck)
+		public static Dictionary<string,Credential> GetCredentials(string resourceId, string[] roleCheck)
         {
-            // Clear any existing credentials
-            _credentials.Clear();
+            Dictionary<string, Credential> _credentials = new();
 
             // Check the roles on the token against what the API expects, return true if the token has all expected roles
             static bool CheckRoles(string[] roleCheck, List<Claim> claims)
@@ -176,7 +173,7 @@ namespace M365Webhooks
 
                             if (CheckRoles(roleCheck, credential.JWT.Claims.ToList()))
                             {
-                                _credentials.Add(credential);
+                                _credentials.Add(tenantId,credential);
                             }
 
                             found = true;
@@ -196,7 +193,7 @@ namespace M365Webhooks
 
                                         if (CheckRoles(roleCheck, credential.JWT.Claims.ToList()))
                                         {
-                                            _credentials.Add(credential);
+                                            _credentials.Add(tenantId,credential);
                                         }
 
                                         found = true;
@@ -233,7 +230,7 @@ namespace M365Webhooks
 
                                     if (CheckRoles(roleCheck, credential.JWT.Claims.ToList()))
                                     {
-                                        _credentials.Add(credential);
+                                        _credentials.Add(tenantId,credential);
                                     }
 
                                     found = true;
@@ -269,7 +266,6 @@ namespace M365Webhooks
         public JwtSecurityToken? JWT { get { return _decodedOauthToken; } }
         public DateTime? Expires { get { return _decodedOauthToken.ValidTo; } }
         public bool Expired { get { return CheckTokenExpired(_decodedOauthToken); } } // We declare the token as expired TokenExpires minutes before real expire time
-        public List<Credential> Credentials { get { return _credentials; } }
 
         #endregion
     }

@@ -39,8 +39,6 @@ namespace M365Webhooks
 		public static readonly string[] ApiMethod = _config.GetSection("Webhooks").GetSection("apiMethod").Get<string[]>();
 		// File path to save the log file
 		public static readonly string LogPath = _config.GetSection("LogPath").Get<string>();
-		// Microsoft let us supply a publisher identifier so we can get a rate limit quota
-		public static readonly string PublisherIdentifier = _config.GetSection("PublisherIdentifier").Get<string>();
         #if DEBUG
 		// Set to true so we log debug events
 		public static bool Debug = true;

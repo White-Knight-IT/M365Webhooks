@@ -11,7 +11,7 @@ namespace M365Webhooks.API
 		#region Private Members
 
 		//The resource we obtain our JWT OAuth2 token for
-		public const string ResourceId = "https://manage.office.com/";
+		public const string ResourceId = "https://manage.office.com";
 		public const string ApiVersion = "v1.0";
 		private static readonly string[] _roles = new string[] { "ActivityFeed.Read", "ActivityFeed.ReadDlp", "ServiceHealth.Read" };
 		private readonly int _tenantsSubscribed;
@@ -28,8 +28,6 @@ namespace M365Webhooks.API
 				Log.WriteLine(_tenantsSubscribed.ToString()+" subscribed to Office 365 Management API activity feed");
             }
 
-			Activities();
-			Thread.CurrentThread.Join(300000);
 		}
 
 		#region Private Methods
@@ -48,7 +46,7 @@ namespace M365Webhooks.API
 			// Subscribe to our specified content type
 			async Task<List<HttpContent>> SendSubscribe(string contentType)
             {
-				return await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType="+contentType+"&PublisherIdentifier=" + Configuration.PublisherIdentifier, HttpMethod.Post);
+				return await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/start?contentType="+contentType+ "&PublisherIdentifier={TENANTID}", HttpMethod.Post);
 			}
 
 			foreach(string _s in _contentTypes)
@@ -57,7 +55,7 @@ namespace M365Webhooks.API
             }
 
 			// List subscriptions
-			List<HttpContent> response = await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/list?PublisherIdentifier=" + Configuration.PublisherIdentifier, HttpMethod.Get);
+			List<HttpContent> response = await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/list?PublisherIdentifier={TENANTID}", HttpMethod.Get);
 
 			int subsTally = 0;
 
@@ -95,10 +93,6 @@ namespace M365Webhooks.API
 
 		#region Public Methods
 
-		/// <summary>
-		/// Gets incidents from https://api.security.microsoft.com/api/incidents
-		/// </summary>
-		/// <returns>List of JSON Objects, each Object is an Incident see https://docs.microsoft.com/en-us/microsoft-365/security/defender/api-list-incidents?view=o365-worldwide</returns>
 		public async Task<List<JsonElement>> Activities()
         {
 			string nowTime = DateTime.Now.ToUniversalTime().ToString("o").Split('.')[0];
@@ -115,7 +109,7 @@ namespace M365Webhooks.API
 			// Get the Activities for our specified content type
 			async Task<List<HttpContent>> GetActivities(string contentType)
             {
-				return await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/content?contentType="+contentType+"&PublisherIdentifier=" + Configuration.PublisherIdentifier + "&startTime=" + LastRequestTime + "&endTime=" + nowTime, HttpMethod.Get);
+				return await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/content?contentType="+contentType+ "&PublisherIdentifier={TENANTID}&startTime=" + LastRequestTime + "&endTime=" + nowTime, HttpMethod.Get);
 			}
 
 			List<HttpContent> responseContent = new();
@@ -162,7 +156,29 @@ namespace M365Webhooks.API
 				}
 
 			}
-			return new List<JsonElement>();
+
+			// Now we fetch the activity arrays from the urls and parse them into activity objects we send to webhook
+
+			List<JsonElement> returnActivities =new();
+
+			foreach (string _s in activities)
+            {
+				string tenantIdFromUrl = _s.Replace(ResourceId + "/api/" + ApiVersion + "/", "").Substring(0,36);
+				List<HttpContent> response = await SendRequest(_s+ "?PublisherIdentifier="+tenantIdFromUrl, HttpMethod.Get, tenantIdFromUrl);
+
+				foreach(HttpContent _h in response)
+                {
+					JsonDocument jsonDoc = await JsonDocument.ParseAsync(await _h.ReadAsStreamAsync());
+					foreach (JsonElement _v in jsonDoc.RootElement.EnumerateArray())
+                    {
+						returnActivities.Add(_v);
+
+					}
+
+				}
+
+			}
+			return returnActivities;
 		}
 
         #endregion

@@ -47,7 +47,6 @@ void CheckDefaultConfigExists()
     ""TokenExpires"": 15,
     ""PollingTime"": 5,
     ""StartFetchMinutes"": 1440,
-    ""PublisherIdentifier"": ""b03a4cb9-04f0-4f91-9061-961f77277f3c"",
     ""Webhooks"": {
         ""webhookAddress"": [ ""https://yourjsonendpoint.com"" ],
         ""webhookType"": [ ""Plain"" ],
@@ -149,16 +148,14 @@ try
     // Do some very light sanity checking of config.json
     SanityCheckConfig();
 
-    new Office365Management();
-
     // Build PullPushPairs based on webhook outputs
     for (int _i = 0; _i < Configuration.WebhookAddress.Length; _i++)
     {
         // Spawn a new thread for each PullPushPair so that they can operate at their own time and are not bound by eachother
-        /*_pollPairs.Add(new PullPushPair(Configuration.Api[_i], Configuration.ApiMethod[_i], Configuration.WebhookAddress[_i], Configuration.WebhookType[_i], Configuration.WebhookAuthType[_i], Configuration.WebhookAuth[_i]));
+        _pollPairs.Add(new PullPushPair(Configuration.Api[_i], Configuration.ApiMethod[_i], Configuration.WebhookAddress[_i], Configuration.WebhookType[_i], Configuration.WebhookAuthType[_i], Configuration.WebhookAuth[_i]));
         Thread thread = new(new ThreadStart(_pollPairs[_i].Poll));
         _threadPool.Add(thread);
-        thread.Start();*/
+        thread.Start();
     }
 }
 catch (Exception ex)
