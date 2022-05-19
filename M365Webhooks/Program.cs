@@ -160,7 +160,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.WriteLine("Exception: " + ex.Message + "\nInner Exception: " + ex.InnerException + "\nSource:" + ex.Source);
+    Log.WriteLine("Exception: " + ex.Message + "\nInner Exception: " + ex.InnerException.Message + "\nSource:" + ex.Source);
     EndProgram();
 }
 

@@ -204,11 +204,11 @@ namespace M365Webhooks
                                 {
                                     if (Configuration.DebugShowSecrets)
                                     {
-                                        Log.WriteLine("Exception applying password to Certificate: " + certPath + " Password: " + certPassword + " Exception: " + ex.Message +" Inner Exception:" + ex.InnerException + " Source: " +ex.Source);
+                                        Log.WriteLine("Exception applying password to Certificate: " + certPath + " Password: " + certPassword + " Exception: " + ex.Message +" Inner Exception:" + ex.InnerException.Message + " Source: " +ex.Source);
                                     }
                                     else
                                     {
-                                        Log.WriteLine("Exception applying password to Certificate: " + certPath + " Password: [DebugShowSecrets = false] Exception: " + ex.Message + " Inner Exception:" + ex.InnerException + " Source: " + ex.Source);
+                                        Log.WriteLine("Exception applying password to Certificate: " + certPath + " Password: [DebugShowSecrets = false] Exception: " + ex.Message + " Inner Exception:" + ex.InnerException.Message + " Source: " + ex.Source);
                                     }
                                 }
                             }
@@ -240,11 +240,11 @@ namespace M365Webhooks
                                 {
                                     if (Configuration.DebugShowSecrets)
                                     {
-                                        Log.WriteLine("Exception using app secret: " + appSecret + " TenantID: "+tenantId+" AppID: "+appId+" Exception: " + ex.Message + " Inner Exception:" + ex.InnerException + " Source: " + ex.Source);
+                                        Log.WriteLine("Exception using app secret: " + appSecret + " TenantID: "+tenantId+" AppID: "+appId+" Exception: " + ex.Message + " Inner Exception:" + ex.InnerException.Message + " Source: " + ex.Source);
                                     }
                                     else
                                     {
-                                        Log.WriteLine("Exception using app secret: [DebugShowSecrets = false] TenantID: " + tenantId + " AppID: " + appId + " Exception: " + ex.Message + " Inner Exception:" + ex.InnerException + " Source: " + ex.Source);
+                                        Log.WriteLine("Exception using app secret: [DebugShowSecrets = false] TenantID: " + tenantId + " AppID: " + appId + " Exception: " + ex.Message + " Inner Exception:" + ex.InnerException.Message + " Source: " + ex.Source);
                                     }
                                 }
                             }

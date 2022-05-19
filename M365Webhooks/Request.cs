@@ -89,23 +89,33 @@ namespace M365Webhooks
 					var requestMessage = new HttpRequestMessage(httpMethod, url);
 					requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", useForRequest.OauthToken);
 
-					var response = await _httpClient.SendAsync(requestMessage);
-
-					//If we dont get get HTTP 200 from the API
-					if (!response.StatusCode.Equals(HttpStatusCode.OK))
+					// Requests can throw exceptions for a number of reasons, we really don't want to stop the whole show for an exception from a single request
+					try
 					{
-						Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
-						return false;
-					}
+						var response = await _httpClient.SendAsync(requestMessage);
 
-					//Empty body in response
-					if (response.Content.Headers.ContentLength <= 0)
-					{
-						Log.WriteLine("Did not get any content from: " + url);
-						return false;
-					}
+						//If we dont get get HTTP 200 from the API
+						if (!response.StatusCode.Equals(HttpStatusCode.OK))
+						{
+							Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
+							return false;
+						}
 
-					responseObjects.Add(response.Content);
+						//Empty body in response
+						if (response.Content.Headers.ContentLength <= 0)
+						{
+							Log.WriteLine("Did not get any content from: " + url);
+							return false;
+						}
+
+						responseObjects.Add(response.Content);
+					}
+                    catch(Exception ex)
+                    {
+						Log.WriteLine("Exception occured sending HTTP request: "+ex.Message+" Inner exception: "+ex.InnerException.Message+" Source: "+ex.Source);
+						return false;
+                    }
+
 					return true;
 				}
 
