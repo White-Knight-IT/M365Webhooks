@@ -1,6 +1,6 @@
 # M365Webhooks
 .NET 6 Console application to consume Microsoft API data as JSON webhooks
 
-Current Release: v1.0.0
+Current Release: v1.0.0-rc (Release Candidate)
 
 Instructions Here: https://github.com/White-Knight-IT/M365Webhooks/wiki
