@@ -10,7 +10,7 @@ namespace M365Webhooks
 	{
 		#region Private Members
 
-		private readonly HttpClient _httpClient;
+		private HttpClient _httpClient;
 		private readonly Dictionary<string,Credential> _credentials;
 
 		//Request will only seek data that is >= this time
@@ -86,37 +86,106 @@ namespace M365Webhooks
 
 					}
 
-					var requestMessage = new HttpRequestMessage(httpMethod, url);
-					requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", useForRequest.OauthToken);
+					// The actual act of fetching over HTTP
+					async Task<bool> Content( bool retry=true)
+                    {
+
+						HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, url);
+						requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", useForRequest.OauthToken);
+
+						if (!Configuration.EndingProgram)
+						{
+							HttpResponseMessage response = await _httpClient.SendAsync(requestMessage);
+
+
+							//If we dont get get HTTP 200 from the API
+							if (!response.StatusCode.Equals(HttpStatusCode.OK))
+							{
+								Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
+
+								// If we get 403 this is most likely hitting the rate limiter we will sleep for 60.5 seconds and try again
+								if (response.StatusCode.Equals(HttpStatusCode.Forbidden) && retry && !Configuration.EndingProgram)
+								{
+									if (Configuration.Debug)
+									{
+										Log.WriteLine("Got a 403 response, probably we are rate limited, sleeping thread for 60 seconds");
+									}
+
+									for (int _i = 0; _i <= 61000; _i = _i + 1000)
+									{
+										if (!Configuration.EndingProgram)
+										{
+											Thread.CurrentThread.Join(1000);
+										}
+									}
+
+									// Try again but don't rerty if fail to avoid endless loop
+									return await Content(false);
+								}
+
+								return false;
+							}
+
+
+							//Empty body in response
+							if (response.Content.Headers.ContentLength <= 0)
+							{
+								Log.WriteLine("Did not get any content from: " + url);
+								return false;
+							}
+
+							responseObjects.Add(response.Content);
+							return true;
+						}
+
+						return false;
+					}
 
 					// Requests can throw exceptions for a number of reasons, we really don't want to stop the whole show for an exception from a single request
 					try
 					{
-						var response = await _httpClient.SendAsync(requestMessage);
-
-						//If we dont get get HTTP 200 from the API
-						if (!response.StatusCode.Equals(HttpStatusCode.OK))
-						{
-							Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
-							return false;
+						//We expect a HTTP 400 for subscribe to already existing subscription so don't retry that case
+						if(!await Content() && !url.Contains("/activity/feed/subscriptions/start") && !Configuration.EndingProgram)
+                        {
+							// Pause 1 second a bit and try again
+							Thread.CurrentThread.Join(1000);
+							return await Content();
 						}
 
-						//Empty body in response
-						if (response.Content.Headers.ContentLength <= 0)
-						{
-							Log.WriteLine("Did not get any content from: " + url);
-							return false;
-						}
-
-						responseObjects.Add(response.Content);
+						return true;
 					}
                     catch(Exception ex)
                     {
-						Log.WriteLine("Exception occured sending HTTP request: "+ex.Message+" Inner exception: "+ex.InnerException.Message+" Source: "+ex.Source);
-						return false;
-                    }
 
-					return true;
+						Log.WriteLine("Exception occured sending HTTP request: "+ex.Message+" Inner exception: "+ex.InnerException.Message+" Source: "+ex.Source + "Will retry in 1 second");
+
+						// Create a fresh HTTP Client
+						_httpClient = new HttpClient();
+
+						// Pause 1 second a bit and try again
+						Thread.CurrentThread.Join(1000);
+
+                        try
+						{
+							//We expect a HTTP 400 for subscribe to already existing subscription so don't retry that case
+							if (!await Content() && !url.Contains("/activity/feed/subscriptions/start"))
+							{
+								// Pause 1 second a bit and try again
+								Thread.CurrentThread.Join(1000);
+								return await Content();
+							}
+
+							return true;
+						}
+						catch (Exception ex2)
+                        {
+							Log.WriteLine("Exception occured sending HTTP request: " + ex2.Message + " Inner exception: " + ex2.InnerException.Message + " Source: " + ex2.Source);
+							return false;
+
+						}
+
+					}
+
 				}
 
 				// Pinned to a single tenantId, send with only that credential then break loop

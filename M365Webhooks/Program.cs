@@ -3,14 +3,12 @@
 /// Published under MIT License
 
 using M365Webhooks;
-using M365Webhooks.API;
 
 CheckDefaultConfigExists();
 
 Log.WriteLine("M365Webhooks Process Started");
 Log.WriteLine("Press Ctrl-C to terminate");
 
-List<Thread> _threadPool = new();
 List<PullPushPair> _pollPairs = new();
 
 // Method to run when control-c instruction to kill process received
@@ -143,19 +141,65 @@ void SanityCheckConfig()
 
 #endregion
 
+#region Watchdog
+
+// We will spawn a watchdog thread to report on polling threads
+void Watchdog()
+{
+    while(!Configuration.EndingProgram)
+    {
+        if(Configuration.Debug)
+        {
+            Log.WriteLine("Watchdog Says: " + _pollPairs.Count.ToString() + " polling threads");
+        }
+
+        foreach (PullPushPair _p in _pollPairs)
+        {
+            // If the thread is not alive start it again
+            if(!_p.CurrentThread.IsAlive)
+            {
+                Thread replacement = new(new ThreadStart(_p.Poll));
+                Log.WriteLine("Watchdog Says: A thread (id: "+_p.CurrentThread.ManagedThreadId.ToString()+") has been found dead, I will respawn it as a new thread (id: )"+replacement.ManagedThreadId);
+
+                try
+                {    
+                    replacement.Start();   
+                }
+                catch(Exception ex)
+                {
+                    Log.WriteLine("Watchdog Says: I was unable to spawn replacement thread (id: "+_p.CurrentThread.ManagedThreadId.ToString()+"), Exception: " + ex.Message + " InnerException: " + ex.InnerException.Message + " Source:" + ex.Source);
+                }
+            }
+        }
+
+        // Sleep watchdog for 10 seconds
+        Thread.CurrentThread.Join(10000);
+    }
+}
+
+#endregion
 try
 {
     // Do some very light sanity checking of config.json
     SanityCheckConfig();
 
-    // Build PullPushPairs based on webhook outputs
+    // Build PullPushPairs based on webhook outputs and start them
     for (int _i = 0; _i < Configuration.WebhookAddress.Length; _i++)
     {
         // Spawn a new thread for each PullPushPair so that they can operate at their own time and are not bound by eachother
         _pollPairs.Add(new PullPushPair(Configuration.Api[_i], Configuration.ApiMethod[_i], Configuration.WebhookAddress[_i], Configuration.WebhookType[_i], Configuration.WebhookAuthType[_i], Configuration.WebhookAuth[_i]));
         Thread thread = new(new ThreadStart(_pollPairs[_i].Poll));
-        _threadPool.Add(thread);
         thread.Start();
+    }
+
+    // Build and start watchdog
+    Thread watchdog = new(new ThreadStart(Watchdog));
+    watchdog.Start();
+
+    if (Configuration.Debug)
+    {
+        Log.WriteLine(_pollPairs.Count + " threads created to poll APIs");
+        Log.WriteLine("Started watchdog thread");
     }
 }
 catch (Exception ex)
@@ -168,21 +212,24 @@ catch (Exception ex)
 // Instruct our threads to die and once all threads are dead the process exits with error 0
 void EndProgram(bool cancelClick = false)
 {
-
+    Configuration.EndingProgram = true;
     bool threadsAlive = true;
-
-    foreach (PullPushPair poller in _pollPairs)
-    {
-        poller.CancelThread = true;
-    }
 
     while (threadsAlive)
     {
         threadsAlive = false;
 
-        foreach (Thread _t in _threadPool)
+        foreach (PullPushPair _p in _pollPairs)
         {
-            threadsAlive = _t.IsAlive;
+            threadsAlive = _p.CurrentThread.IsAlive;
+            if(threadsAlive)
+            {
+                if (Configuration.Debug)
+                {
+                    Log.WriteLine("Waiting for thread id: " + _p.CurrentThread.ManagedThreadId.ToString() + " to terminate");
+                    Thread.CurrentThread.Join(1000);
+                }
+            }
         }
     }
 

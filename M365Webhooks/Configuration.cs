@@ -9,7 +9,10 @@ namespace M365Webhooks
 
 		#region Non-User Configurable
 		// Sign-in Authority to get OAuth2 tokens
-		public const string Authority = "https://login.microsoftonline.com";
+		public static readonly string Authority = "https://login.microsoftonline.com";
+
+		// We will use this to signal any async work in progress to kill off upon application termination
+		public static bool EndingProgram = false;
 
 		#endregion
 
