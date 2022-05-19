@@ -44,21 +44,20 @@
 
 		/// <summary>
 		/// Flushes any contents still to be wrote to the file to disk and closes the log
+		/// <param name="blocking">determins if the flush is async or blocking</param>
 		/// </summary>
-		public static async void CloseLog()
+		public static void CloseLog()
 		{
-			await _logFileStream.FlushAsync();
 			_logFileStream.Close();
 		}
 
 		/// <summary>
-        /// Creates a time stamp to append on Log/Console entries
-        /// </summary>
-        /// <returns>String timestamp in [Date - Time]: format</returns>
+		/// Creates a time stamp to append on Log/Console entries
+		/// </summary>
+		/// <returns>String timestamp in [Date - Time]: format</returns>
 		public static string LogTimeStamp()
         {
 			return "[" + DateTime.Now.ToShortDateString() + " - " + DateTime.Now.ToLongTimeString() + "]: ";
-
 		}
 
 	}

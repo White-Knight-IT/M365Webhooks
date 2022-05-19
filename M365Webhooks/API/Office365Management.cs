@@ -38,11 +38,6 @@ namespace M365Webhooks.API
         /// <returns>Number of tenants subscribed</returns>
 		private async Task<int> Subscribe()
         {
-			if (Configuration.Debug)
-			{
-				Log.WriteLine("It may be expected to see some HTTP 400 BadRequest responses below if we are already subscribed for the activity feeds");
-			}
-
 			// Subscribe to our specified content type
 			async Task<List<HttpContent>> SendSubscribe(string contentType)
             {

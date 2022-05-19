@@ -101,7 +101,11 @@ namespace M365Webhooks
 							//If we dont get get HTTP 200 from the API
 							if (!response.StatusCode.Equals(HttpStatusCode.OK))
 							{
-								Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
+								// We expect 400 for already existing subscriptions 
+								if (!url.Contains("/activity/feed/subscriptions/start"))
+								{
+									Log.WriteLine("Did not get HTTP 200 OK from: " + url + " instead we got: " + response.StatusCode.ToString());
+								}
 
 								// If we get 403 this is most likely hitting the rate limiter we will sleep for 60.5 seconds and try again
 								if (response.StatusCode.Equals(HttpStatusCode.Forbidden) && retry && !Configuration.EndingProgram)

@@ -240,7 +240,7 @@ void EndProgram(bool cancelClick = false)
     }
     else
     {
-        Log.WriteLine("M365Webhooks Process Ended");
+        Log.WriteLine("M365Webhooks Process Ended",true);
     }
 
 }
