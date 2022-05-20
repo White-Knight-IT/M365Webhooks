@@ -27,7 +27,7 @@
 		/// </summary>
 		/// <param name="line">The line to write to the log</param>
 		/// <param name="writeToConsole">Write to console or not in addition to log file</param>
-		public static async void WriteLine(string line, bool writeToConsole=true)
+		public static void WriteLine(string line, bool writeToConsole=true)
 		{
 			if (writeToConsole)
 			{
@@ -37,7 +37,7 @@
 			if (LoggingEnabled())
 			{
 				_logFileStream = new(Configuration.LogPath, true);
-				await _logFileStream.WriteLineAsync(LogTimeStamp() + line + "\n");
+				_logFileStream.WriteLine(LogTimeStamp() + line + "\n");
 				CloseLog();
 			}
 		}
@@ -48,6 +48,7 @@
 		/// </summary>
 		public static void CloseLog()
 		{
+			_logFileStream.Flush();
 			_logFileStream.Close();
 		}
 
