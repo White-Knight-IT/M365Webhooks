@@ -5,7 +5,7 @@
 	/// </summary>
 	public static class Log
 	{
-		private static StreamWriter? _logFileStream;
+		private static TextWriter _textWriter = new StreamWriter(Configuration.LogPath, true);
 
 		/// <summary>
 		/// Determines if logging is enabled based on a log path being supplied in config.json
@@ -36,9 +36,7 @@
 
 			if (LoggingEnabled())
 			{
-				_logFileStream = new(Configuration.LogPath, true);
-				_logFileStream.WriteLine(LogTimeStamp() + line + "\n");
-				CloseLog();
+				_textWriter.WriteLine(LogTimeStamp() + line + "\n");
 			}
 		}
 
@@ -48,8 +46,8 @@
 		/// </summary>
 		public static void CloseLog()
 		{
-			_logFileStream.Flush();
-			_logFileStream.Close();
+			_textWriter.Flush();
+			_textWriter.Close();
 		}
 
 		/// <summary>

@@ -47,7 +47,7 @@ namespace M365Webhooks.API
 			foreach(string _s in _contentTypes)
             {
 				await SendSubscribe(_s);
-            }
+			}
 
 			// List subscriptions
 			List<HttpContent> response = await SendRequest(ResourceId + "/api/" + ApiVersion + "/{TENANTID}/activity/feed/subscriptions/list?PublisherIdentifier={TENANTID}", HttpMethod.Get);

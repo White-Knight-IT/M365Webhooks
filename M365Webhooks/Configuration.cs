@@ -40,6 +40,8 @@ namespace M365Webhooks
 		public static readonly string[] Api = _config.GetSection("Webhooks").GetSection("api").Get<string[]>();
 		// Array of method names that represent which method to target on each API used by each webhook
 		public static readonly string[] ApiMethod = _config.GetSection("Webhooks").GetSection("apiMethod").Get<string[]>();
+		// Threshold to backoff webhooks
+		public static readonly int Threshold = _config.GetSection("Webhooks").GetSection("threshold").Get<int>();
 		// File path to save the log file
 		public static readonly string LogPath = _config.GetSection("LogPath").Get<string>();
         #if DEBUG

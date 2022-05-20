@@ -51,7 +51,8 @@ void CheckDefaultConfigExists()
         ""webhookAuthType"": [ ""Blank"" ],
         ""webhookAuth"": [ ""UHV0IHlvdXIgYmFzZTY0IGVuY29kZWQgYXV0aCB0b2tlbiBoZXJlIHBhZCA="" ],
         ""api"": [ ""MicrosoftThreatProtection"" ],
-        ""apiMethod"": [""Incidents""]
+        ""apiMethod"": [""Incidents""],
+        ""threshold"": 50
     }
 }");
             _configFileStream.Flush();
@@ -241,6 +242,7 @@ void EndProgram(bool cancelClick = false)
     else
     {
         Log.WriteLine("M365Webhooks Process Ended",true);
+        Log.CloseLog();
     }
 
 }

@@ -74,6 +74,11 @@ namespace M365Webhooks
 				return true;
             }
 
+			if(Configuration.Debug)
+            {
+				Log.WriteLine("Did not get HTTP 200 OK sending webhook, instead got "+response.StatusCode.ToString());
+            }
+
 			return false;
 		}
 

@@ -43,17 +43,38 @@ namespace M365Webhooks
 
             while (true && !Configuration.EndingProgram)
             {
+                int sent = 0;
+
                 foreach (JsonElement _j in ((Task<List<JsonElement>>)apiMethod.Invoke(_api, null)).Result)
                 {
+                    if (Configuration.EndingProgram)
+                    {
+                        // Program is ending break loop
+                        break;
+                    }
+                    
                     webhookMethod.Invoke(_webhook, new object[] { _j });
+
+                    // We want to avoid a webhook flood so we will scale back when we get bulk webhooks to post
+                    int floodProtect = sent * 10;
+
+                    // Limit flood protection to one webhook every threshold miliseconds second max
+                    if (floodProtect > Configuration.Threshold)
+                    {
+                        floodProtect = Configuration.Threshold;
+                    }
+
+                    Thread.CurrentThread.Join(floodProtect);
+                    sent++;
+                    
                 }
 
-                // Causes thread to sleep for PollingTime seconds before pooling again but checks if thread cancelled every 1 second
-                for(int _i=0; _i < (Configuration.PollingTime * 1000); _i=_i+1000)
+                // Causes thread to sleep for PollingTime seconds before pooling again but checks if thread cancelled every 1/10 second
+                for(int _i=0; _i < (Configuration.PollingTime * 1000); _i=_i+100)
                 {
                     if (Configuration.EndingProgram)
                         break;
-                    Thread.CurrentThread.Join(1000);
+                    Thread.CurrentThread.Join(100);
                 }
             }
         }
