@@ -42,7 +42,6 @@
 
 		/// <summary>
 		/// Flushes any contents still to be wrote to the file to disk and closes the log
-		/// <param name="blocking">determins if the flush is async or blocking</param>
 		/// </summary>
 		public static void CloseLog()
 		{

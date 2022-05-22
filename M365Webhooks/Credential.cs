@@ -12,7 +12,7 @@ namespace M365Webhooks
 		private readonly string _tenantId;
 		private readonly string _appId;
 		private string _oauthToken;
-        private JwtSecurityToken? _decodedOauthToken;
+        private JwtSecurityToken _decodedOauthToken;
         private readonly object _credential;
         private readonly string _resourceId;
 
@@ -25,26 +25,22 @@ namespace M365Webhooks
 			_appId = appId;
 			_credential = credential;
             _resourceId = resourceId;
-            _oauthToken = GetToken();
+
+            // _oauthToken and _decodedOauthToken populate in this call
+            GetToken();
 
         }
 
         #region Private Methods
 
-        // Decode the JWT OAuth2 Token
-        private JwtSecurityToken DecodeToken(string oauthToken)
-        {
-            return new JwtSecurityTokenHandler().ReadJwtToken(oauthToken);
-        }
-
         // Check if the supplied token is expired
-        private bool CheckTokenExpired(JwtSecurityToken token)
+        private bool CheckTokenExpired()
         {
-            return (token.ValidTo.AddMinutes(-Configuration.TokenExpires) < DateTime.UtcNow);
+            return _decodedOauthToken.ValidTo.AddMinutes(-Configuration.TokenExpires) < DateTime.UtcNow;
         }
 
         // Fetch OAuth2 Token from Azure AD app
-        private string GetToken()
+        private void GetToken()
         {
 			AuthenticationContext auth = new AuthenticationContext($"{Configuration.Authority}/{_tenantId}/");
 			AuthenticationResult authenticationResult;
@@ -58,30 +54,30 @@ namespace M365Webhooks
 			{
 				// Credential is a certificate
 				case ClientAssertionCertificate:
-					authenticationResult = auth.AcquireTokenAsync(_resourceId, (ClientAssertionCertificate)_credential).GetAwaiter().GetResult();
+					authenticationResult = auth.AcquireTokenAsync(_resourceId, (ClientAssertionCertificate)_credential).Result;
 					break;
 
 				// Credential is an App Secret
 				default:
-					authenticationResult = auth.AcquireTokenAsync(_resourceId, (ClientCredential)_credential).GetAwaiter().GetResult();
+					authenticationResult = auth.AcquireTokenAsync(_resourceId, (ClientCredential)_credential).Result;
 					break;			
 			}
 
-            string oauthToken = authenticationResult.AccessToken;
-            _decodedOauthToken=DecodeToken(oauthToken);
+            _oauthToken = authenticationResult.AccessToken;
+            _decodedOauthToken= new JwtSecurityTokenHandler().ReadJwtToken(_oauthToken);
+
             if (Configuration.Debug)
             {
                 // Only dump tokens if explicitely told to save tokens ending up in logs and debug output
                 if (Configuration.DebugShowSecrets)
                 { 
-                    Log.WriteLine("Token: "+oauthToken);
+                    Log.WriteLine("Token: "+_oauthToken);
                 }
                 else
                 {
                     Log.WriteLine("Token: [DebugShowSecrets = false]");
                 }
             }
-            return oauthToken;
 		}      
 
         #endregion
@@ -94,26 +90,36 @@ namespace M365Webhooks
         /// <returns>true/false represents if a new token was sucessfully retrieved</returns>
 		public bool RefreshToken()
         {
-			string newToken = GetToken();
-
-            // Check the new token isn't null
-            if (newToken.Equals(null))
+            try
             {
-				return false;
+                GetToken();
+
+                // Check the new token isn't null
+                if (OauthToken.Equals(null))
+                {
+                    return false;
+                }
+
+                if(Configuration.Debug)
+                {
+                    if (Configuration.DebugShowSecrets)
+                    {
+                        Log.WriteLine("Successfully refreshed token for TenantId: " + _tenantId + " and AppId: " + _appId+" Token: "+_oauthToken);
+                    }
+                    else
+                    {
+                        Log.WriteLine("Successfully refreshed token for TenantId: " + _tenantId + " and AppId: " + _appId + " Token: [DebugShowSecrets = false]");
+                    }
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                Log.WriteLine("Exception refreshing token: " + ex.Message + " Inner Exception: " + ex.InnerException.Message + " Source: " + ex.Source);
             }
 
-            JwtSecurityToken newDecodedToken = DecodeToken(newToken);
-
-            // Check the new token isn't isn't expired
-            if (CheckTokenExpired(newDecodedToken))
-            {
-                return false;
-            }
-
-            // All good set the new token
-            _oauthToken = newToken;
-            _decodedOauthToken = newDecodedToken;
-            return true;
+            return false;
         }
 
         #endregion
@@ -265,7 +271,7 @@ namespace M365Webhooks
         public string ResourceID { get { return _resourceId; } }
         public JwtSecurityToken? JWT { get { return _decodedOauthToken; } }
         public DateTime? Expires { get { return _decodedOauthToken.ValidTo; } }
-        public bool Expired { get { return CheckTokenExpired(_decodedOauthToken); } } // We declare the token as expired TokenExpires minutes before real expire time
+        public bool Expired { get { return CheckTokenExpired(); } } // We declare the token as expired TokenExpires minutes before real expire time
 
         #endregion
     }
