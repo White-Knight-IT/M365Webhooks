@@ -16,5 +16,22 @@
         {
         }
     }
+
+    public class MachineTime : Exception
+    {
+        public MachineTime()
+        {
+        }
+
+        public MachineTime(string message)
+            : base(message)
+        {
+        }
+
+        public MachineTime(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
+    }
 }
 

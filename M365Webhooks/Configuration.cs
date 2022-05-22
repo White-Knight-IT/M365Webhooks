@@ -52,8 +52,6 @@ namespace M365Webhooks
         #endif
 		// Set to true to show secrets such as certificate passwords or OAuth2 tokens in log and console
 		public static bool DebugShowSecrets = _config.GetSection("DebugShowSecrets").Get<string>().ToLower().Equals("true");
-		// Set to decide how long before a token expires we declare it already expired [ Minutes 0 - 58 ]
-		public static int TokenExpires = _config.GetSection("TokenExpires").Get<int>();
 		// Poll the API in this interval [ Minutes 3 - 2147483647 ] 
 		public static int PollingTime = _config.GetSection("PollingTime").Get<int>();
 		// On start up fetch back this many minutes from the APIs [ Minutes 0 - 2147483647 ]

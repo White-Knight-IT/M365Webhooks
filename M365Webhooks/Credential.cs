@@ -15,6 +15,7 @@ namespace M365Webhooks
         private JwtSecurityToken _decodedOauthToken;
         private readonly object _credential;
         private readonly string _resourceId;
+        private const int _timeMargin = 4;
 
         #endregion
 
@@ -36,7 +37,7 @@ namespace M365Webhooks
         // Check if the supplied token is expired
         private bool CheckTokenExpired()
         {
-            return _decodedOauthToken.ValidTo.AddMinutes(-Configuration.TokenExpires) < DateTime.UtcNow;
+            return _decodedOauthToken.ValidTo.AddMinutes(-_timeMargin) < DateTime.UtcNow;
         }
 
         // Fetch OAuth2 Token from Azure AD app
@@ -65,6 +66,13 @@ namespace M365Webhooks
 
             _oauthToken = authenticationResult.AccessToken;
             _decodedOauthToken= new JwtSecurityTokenHandler().ReadJwtToken(_oauthToken);
+
+            // Check that our machine time is set ok
+            if(_decodedOauthToken.IssuedAt>DateTime.UtcNow.AddMinutes(-2) || _decodedOauthToken.IssuedAt <= DateTime.UtcNow.AddMinutes(-7))
+            {
+                Log.WriteLine("Machine time does not appear in sync with Microsoft Servers, Local time: " + DateTime.UtcNow.ToLongTimeString() + " Remote time: " + _decodedOauthToken.IssuedAt.ToLongTimeString(), true);
+                throw (new MachineTime("The system time deviates too far from the time on Microsoft Servers"));
+            }
 
             if (Configuration.Debug)
             {
@@ -271,7 +279,7 @@ namespace M365Webhooks
         public string ResourceID { get { return _resourceId; } }
         public JwtSecurityToken? JWT { get { return _decodedOauthToken; } }
         public DateTime? Expires { get { return _decodedOauthToken.ValidTo; } }
-        public bool Expired { get { return CheckTokenExpired(); } } // We declare the token as expired TokenExpires minutes before real expire time
+        public bool Expired { get { return CheckTokenExpired(); } } // We declare the token as expired Configuration.TokenExpires minutes before real expire time
 
         #endregion
     }

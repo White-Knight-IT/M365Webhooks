@@ -9,7 +9,6 @@
     "Debug": "true",
     "DebugShowSecrets": "false",
     "LogPath": "",
-    "TokenExpires": 15,
     "PollingTime": 5,
     "StartFetchMinutes": 1440,
     "Webhooks": {

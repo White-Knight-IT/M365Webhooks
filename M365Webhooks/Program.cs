@@ -42,7 +42,6 @@ void CheckDefaultConfigExists()
     ""Debug"": ""true"",
     ""DebugShowSecrets"": ""false"",
     ""LogPath"": """",
-    ""TokenExpires"": 15,
     ""PollingTime"": 5,
     ""StartFetchMinutes"": 1440,
     ""Webhooks"": {
@@ -92,28 +91,6 @@ void SanityCheckConfig()
     if ((webhooks != Configuration.WebhookType.Length) || (webhooks != Configuration.WebhookAuth.Length) || (webhooks != Configuration.WebhookAuthType.Length) || (webhooks != Configuration.Api.Length) || (webhooks != Configuration.ApiMethod.Length))
     {
         throw new NotEnoughArguments("There must be equal amounts of WebhookAddress, WebhookType, WebhookAuth, WebhookAuthType, Api and ApiMethod");
-    }
-
-    // Tokens live 60 minutes so anything over 58 could cause constant token fetch
-    if (Configuration.TokenExpires > 58)
-    {
-        if (!Configuration.Debug)
-        {
-            Log.WriteLine("TokenExpires dangerously large (" + Configuration.TokenExpires + "), reduced it to 58", true); // Force console output
-            Configuration.TokenExpires = 58;
-        }
-        else
-        {
-            Log.WriteLine("TokenExpires dangerously large (" + Configuration.TokenExpires + "), recommended action to reduce it to 58 or less", true); // Force console output
-        }
-
-    }
-
-    // Dont allow a token expires offset < 0
-    if (Configuration.TokenExpires < 0)
-    { 
-        Log.WriteLine("TokenExpires less than 0 (" + Configuration.TokenExpires + "), set it to 0", true); // Force console output
-        Configuration.TokenExpires = 0;
     }
 
     //Make sure polling time at least 3
