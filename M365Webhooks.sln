@@ -44,6 +44,6 @@ Global
 		$0.TextStylePolicy = $5
 		$5.inheritsSet = null
 		$5.scope = text/x-json
-		version = 1.0.2-rc
+		version = 1.0.3-rc
 	EndGlobalSection
 EndGlobal
