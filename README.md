@@ -1,5 +1,7 @@
 # M365Webhooks
-.NET 6 Console application to consume Microsoft API data as JSON webhooks
+M365Webhooks is a crossplatform .NET 6 console application designed to consume Microsoft API data and relay it as JSON webhooks. This is especially useful for SOCs that are not using Splunk or any of the SEIMs with an official method to retreive data from Microsoft APIs.
+
+For Elasticsearch, this is a replacement for the Microsoft filebeat plugin, the filebeat pluggin only allows retrieval of data from a single Microsoft 365 tenant. This application was born to work around that limitation and retreive data across any number of Microsoft 365 tenants.
 
 **Current Release: v1.0.2-rc (Release Candidate)**
 
