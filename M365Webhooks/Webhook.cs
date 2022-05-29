@@ -41,22 +41,28 @@ namespace M365Webhooks
 		{
 			HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, _webhookAddress);
 
-			switch (_authType.ToLower())
-            {
-				case "blank":
-					requestMessage.Headers.TryAddWithoutValidation("Authorization", _auth);
-					break;
+			// If we supply an auth credential allocate it according to specified authType
+			if (!string.IsNullOrEmpty(_auth))
+			{
+				switch (_authType.ToLower())
+				{
+					case "blank":
 
-				case "bearer":
-					requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _auth);
-					break;
+						requestMessage.Headers.TryAddWithoutValidation("Authorization", _auth);
 
-				case "basic":
-					requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", _auth);
-					break;
+						break;
 
-				default:
-					break;
+					case "bearer":
+						requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _auth);
+						break;
+
+					case "basic":
+						requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Basic", _auth);
+						break;
+
+					default:
+						break;
+				}
 			}
 
 			return requestMessage;

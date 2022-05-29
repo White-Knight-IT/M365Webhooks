@@ -5,9 +5,10 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ReleaseVersion>1.0.3-rc</ReleaseVersion>
+    <ReleaseVersion>1.0.3</ReleaseVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <ItemGroup>
     <None Remove="Microsoft.IdentityModel.Clients.ActiveDirectory" />
     <None Remove="Microsoft.Extensions.Configuration" />
