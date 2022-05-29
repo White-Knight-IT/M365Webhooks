@@ -5,7 +5,7 @@ For Elasticsearch, this is a replacement for the Microsoft filebeat plugin, the 
 
 The binary (M365Webhooks.dll) requires that you have the .NET 6.0 runtime installed.
 
-**Current Release: v1.0.3 (Release Candidate)**
+**Current Release: v1.0.3 (Stable)**
 
 Instructions Here: https://github.com/White-Knight-IT/M365Webhooks/wiki
 
