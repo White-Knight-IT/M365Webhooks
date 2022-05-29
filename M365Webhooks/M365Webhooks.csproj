@@ -5,23 +5,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ReleaseVersion>1.0.3</ReleaseVersion>
+    <Version>1.0.4</Version>
+    <ReleaseVersion>1.0.4</ReleaseVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <ItemGroup>
-    <None Remove="Microsoft.IdentityModel.Clients.ActiveDirectory" />
-    <None Remove="Microsoft.Extensions.Configuration" />
-    <None Remove="Microsoft.Extensions.Configuration.Binder" />
-    <None Remove="Microsoft.Extensions.Configuration.Json" />
-    <None Remove="Microsoft.Extensions.Configuration.EnvironmentVariables" />
-    <None Remove="System.IdentityModel.Tokens.Jwt" />
-    <None Remove="API\" />
-    <None Remove="Webhooks\" />
-    <None Remove="Microsoft.Extensions.Logging" />
-    <None Remove="API\MicrosoftGraphSecurity.cs_" />
-    <None Remove="..\.editorconfig" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
