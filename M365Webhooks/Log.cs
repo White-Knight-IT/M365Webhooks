@@ -45,8 +45,11 @@
 		/// </summary>
 		public static void CloseLog()
 		{
-			_textWriter.Flush();
-			_textWriter.Close();
+			if (LoggingEnabled())
+			{
+				_textWriter.Flush();
+				_textWriter.Close();
+			}
 		}
 
 		/// <summary>
