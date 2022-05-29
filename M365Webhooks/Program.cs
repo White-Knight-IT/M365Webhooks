@@ -7,7 +7,7 @@ using M365Webhooks;
 
 CheckDefaultConfigExists();
 
-Log.WriteLine("M365Webhooks Process Started v"+ Assembly.GetEntryAssembly().GetName().Version.Major+"."+ Assembly.GetEntryAssembly().GetName().Version.Minor+"."+ Assembly.GetEntryAssembly().GetName().Version.Build);
+Log.WriteLine("M365Webhooks Process Started v"+ Assembly.GetEntryAssembly()?.GetName().Version?.Major+"."+ Assembly.GetEntryAssembly()?.GetName().Version?.Minor+"."+ Assembly.GetEntryAssembly()?.GetName().Version?.Build);
 Log.WriteLine("Press Ctrl-C to terminate");
 
 List<PullPushPair> _pollPairs = new();
